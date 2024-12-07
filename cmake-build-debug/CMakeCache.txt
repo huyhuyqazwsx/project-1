@@ -14,6 +14,15 @@
 # EXTERNAL cache entries
 ########################
 
+//Path to a file.
+BZIP2_INCLUDE_DIR:PATH=C:/Users/HUY/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/include
+
+//Path to a library.
+BZIP2_LIBRARY_DEBUG:FILEPATH=C:/Users/HUY/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/debug/lib/libbz2d.dll.a
+
+//Path to a library.
+BZIP2_LIBRARY_RELEASE:FILEPATH=C:/Users/HUY/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libbz2.dll.a
+
 //Path to a program.
 CMAKE_ADDR2LINE:FILEPATH=C:/mingw64/bin/addr2line.exe
 
@@ -119,7 +128,7 @@ CMAKE_INSTALL_PREFIX:PATH=C:/Program Files (x86)/Project
 CMAKE_LINKER:FILEPATH=C:/mingw64/bin/ld.exe
 
 //make program
-CMAKE_MAKE_PROGRAM:FILEPATH=C:/Program Files/JetBrains/CLion 2024.3/bin/ninja/win/x64/ninja.exe
+CMAKE_MAKE_PROGRAM:FILEPATH=C:/PROGRA~1/JETBRA~1/CLION2~1.3/bin/ninja/win/x64/ninja.exe
 
 //Flags used by the linker during the creation of modules during
 // all build types.
@@ -236,8 +245,8 @@ CMAKE_STRIP:FILEPATH=C:/mingw64/bin/strip.exe
 //Path to a program.
 CMAKE_TAPI:FILEPATH=CMAKE_TAPI-NOTFOUND
 
-//The CMake toolchain file
-CMAKE_TOOLCHAIN_FILE:FILEPATH=C:/Users/HUY/.vcpkg-clion/vcpkg/scripts/buildsystems/vcpkg.cmake
+//No help, variable specified on the command line.
+CMAKE_TOOLCHAIN_FILE:UNINITIALIZED=C:\Users\HUY\.vcpkg-clion\vcpkg\scripts\buildsystems\vcpkg.cmake
 
 //If this value is on, makefiles will be generated without the
 // .SILENT directive, and all commands will be echoed to the console
@@ -312,6 +321,9 @@ Z_VCPKG_PWSH_PATH:FILEPATH=Z_VCPKG_PWSH_PATH-NOTFOUND
 // triplet
 _VCPKG_INSTALLED_DIR:PATH=C:/Users/HUY/.vcpkg-clion/vcpkg/installed
 
+//The directory containing a CMake configuration file for libzip.
+libzip_DIR:PATH=C:/Users/HUY/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/share/libzip
+
 //The directory containing a CMake configuration file for unofficial-minizip.
 unofficial-minizip_DIR:PATH=C:/Users/HUY/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/share/unofficial-minizip
 
@@ -320,6 +332,14 @@ unofficial-minizip_DIR:PATH=C:/Users/HUY/.vcpkg-clion/vcpkg/installed/x64-mingw-
 # INTERNAL cache entries
 ########################
 
+//ADVANCED property for variable: BZIP2_INCLUDE_DIR
+BZIP2_INCLUDE_DIR-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: BZIP2_LIBRARY_DEBUG
+BZIP2_LIBRARY_DEBUG-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: BZIP2_LIBRARY_RELEASE
+BZIP2_LIBRARY_RELEASE-ADVANCED:INTERNAL=1
+//Have symbol BZ2_bzCompressInit
+BZIP2_NEED_PREFIX:INTERNAL=1
 //ADVANCED property for variable: CMAKE_ADDR2LINE
 CMAKE_ADDR2LINE-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_AR
@@ -476,8 +496,10 @@ CMAKE_TAPI-ADVANCED:INTERNAL=1
 CMAKE_TOOLCHAIN_FILE-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_VERBOSE_MAKEFILE
 CMAKE_VERBOSE_MAKEFILE-ADVANCED:INTERNAL=1
+//Details about finding BZip2
+FIND_PACKAGE_MESSAGE_DETAILS_BZip2:INTERNAL=[optimized;C:/Users/HUY/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libbz2.dll.a;debug;C:/Users/HUY/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/debug/lib/libbz2d.dll.a][C:/Users/HUY/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/include][v1.0.8()]
 //Details about finding ZLIB
-FIND_PACKAGE_MESSAGE_DETAILS_ZLIB:INTERNAL=[optimized;C:/Users/HUY/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libzlib.dll.a;debug;C:/Users/HUY/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/debug/lib/libzlibd.dll.a][C:/Users/HUY/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/include][c ][v1.3.1()]
+FIND_PACKAGE_MESSAGE_DETAILS_ZLIB:INTERNAL=[optimized;C:/Users/HUY/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libzlib.dll.a;debug;C:/Users/HUY/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/debug/lib/libzlibd.dll.a][C:/Users/HUY/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/include][c ][v1.3.1(1.1.2)]
 //Install the dependencies listed in your manifest:
 //\n    If this is off, you will have to manually install your dependencies.
 //\n    See https://github.com/microsoft/vcpkg/tree/master/docs/specifications/manifests.md
