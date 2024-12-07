@@ -63,10 +63,10 @@ void bungnotohop(int len,std::string &filezip, std::string password, std::string
 }
 
 int main() {
-    std::string filezip="D:/testzip/h.zip"; //duong dan file zip
+    std::string filezip="D:/testzip/huy.zip"; //duong dan file zip
     std::string password="0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
     int maxlen=4;
-    for (int i=0;i<maxlen;i++) {
+    for (int i=0;i<=maxlen;i++) {
         bungnotohop(i,filezip,password,"");
     }
 
