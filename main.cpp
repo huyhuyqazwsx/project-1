@@ -57,7 +57,6 @@ void bungnotohop(int len,std::string &filezip, std::string password, std::string
         if (passwordFound.load()) {
             return;
         }
-
         bungnotohop(len-1,filezip,password,midpassword+password[i]);
     }
 }
