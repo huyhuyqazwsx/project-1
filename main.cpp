@@ -5,8 +5,8 @@
 #include <atomic>
 #include <fstream>
 #include <chrono>
-using namespace std;
 
+using namespace std;
 
 atomic<bool> passwordFound(false);
 
@@ -27,8 +27,9 @@ bool trypass(string &filezip,string &password) {
     }
     //thu mo file voi mat khau
     if (unzOpenCurrentFilePassword(file , password.c_str())==UNZ_OK) {
+        // cout <<password<<endl;
         char dem[1024];//moi lan doc toi da 1024 byte
-        int bytesread=0;//so luong dang co
+        int bytesread=0;//so luong byte dang co
         long long crc=0;
 
         //ham kiem tra crc
@@ -41,7 +42,7 @@ bool trypass(string &filezip,string &password) {
 
         if (unzGetCurrentFileInfo(file, &fileinfo,nullptr,0,nullptr,0,nullptr,0) == UNZ_OK) {
             if (fileinfo.crc==crc) {
-                cout<<"Tim thay mat khau :"<<password<<endl;
+                cout<<"Tim thay mat khau: "<<password<<endl;
                 passwordFound.store(true);//da tim thay
                 unzCloseCurrentFile(file);
                 unzClose(file);
@@ -62,7 +63,7 @@ void matkhautudanhsach(string &filezip, string &passwordfile) {
             if (passwordFound.load()) {
                 break;
             }
-            // cout <<line<<endl;
+
             trypass(filezip, line);
         }
         file.close();
@@ -70,7 +71,7 @@ void matkhautudanhsach(string &filezip, string &passwordfile) {
 }
 
 int main() {
-    string filezip="D:/testzip/h.zip"; //duong dan file zip
+    string filezip="D:/testzip/bungnotohop.zip"; //duong dan file zip
     string passwordflie="D:/testzip/bungnotohop.txt";
 
     auto start = chrono::high_resolution_clock::now();
