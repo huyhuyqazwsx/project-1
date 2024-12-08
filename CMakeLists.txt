@@ -15,3 +15,6 @@ target_link_libraries(Project PRIVATE unofficial::minizip::minizip)
 
 find_package(libzip CONFIG REQUIRED)
 target_link_libraries(Project PRIVATE libzip::zip)
+
+find_package(7zip CONFIG REQUIRED)
+target_link_libraries(Project PRIVATE 7zip::7zip)

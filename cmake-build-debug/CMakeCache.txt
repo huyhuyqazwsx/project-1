@@ -14,6 +14,9 @@
 # EXTERNAL cache entries
 ########################
 
+//The directory containing a CMake configuration file for 7zip.
+7zip_DIR:PATH=C:/Users/HUY/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/share/7zip
+
 //Path to a file.
 BZIP2_INCLUDE_DIR:PATH=C:/Users/HUY/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/include
 

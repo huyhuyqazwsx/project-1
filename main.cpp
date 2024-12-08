@@ -3,22 +3,25 @@
 #include <string>
 #include <zlib.h>
 #include <atomic>
+#include <fstream>
+#include <chrono>
+using namespace std;
 
 
-std::atomic<bool> passwordFound(false);
+atomic<bool> passwordFound(false);
 
-bool trypass(std::string &filezip, std::string &password) {
+bool trypass(string &filezip, string &password) {
     //unzOpen su dung bien *char nen phai su dung c_str()
     unzFile file =unzOpen(filezip.c_str());
 
     //Neu khong mo duoc file zip
     if (file == NULL) {
-        std::cout<<"Loi khong mo duoc file";
+        cout<<"Loi khong mo duoc file";
         return false;
     }
     //neu zip rong hoac loi khi mo
     if (unzGoToFirstFile(file)!=UNZ_OK) {
-        std::cout<<"khong mo duoc file";
+        cout<<"khong mo duoc file";
         unzClose(file);
         return false;
     }
@@ -38,7 +41,7 @@ bool trypass(std::string &filezip, std::string &password) {
 
         if (unzGetCurrentFileInfo(file, &fileinfo,nullptr,0,nullptr,0,nullptr,0) == UNZ_OK) {
             if (fileinfo.crc==crc) {
-                std::cout<<"Tim thay mat khau :"<<password<<std::endl;
+                cout<<"Tim thay mat khau :"<<password<<endl;
                 passwordFound.store(true);//da tim thay
                 unzCloseCurrentFile(file);
                 unzClose(file);
@@ -50,29 +53,35 @@ bool trypass(std::string &filezip, std::string &password) {
     return false;
 }
 
-void bungnotohop(int len,std::string &filezip, std::string password, std::string midpassword) {
-    if (len==0 || passwordFound.load()) {
-        if (!passwordFound.load()) {
-            std::cout<<midpassword<<std::endl;
-            trypass(filezip, midpassword);
-        }
-        return;
-    }
+void matkhautudanhsach(string &filezip, string &passwordfile) {
+    ifstream file(passwordfile);
 
-    for (int i=0;i<password.size();i++) {
-        if (passwordFound.load()) {
-            return;
+    if (file.is_open()) {
+        string line;
+        while (getline(file, line)) {
+            if (passwordFound.load()) {
+                break;
+            }
+            cout <<line<<endl;
+            trypass(filezip, line);
         }
-        bungnotohop(len-1,filezip,password,midpassword+password[i]);
+        file.close();
     }
 }
 
 int main() {
-    std::string filezip="D:/testzip/huy.zip"; //duong dan file zip
-    std::string password="0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    int maxlen=4;
-    for (int i=0;i<=maxlen;i++) {
-        bungnotohop(i,filezip,password,"");
-    }
+    string filezip="D:/testzip/huy.zip"; //duong dan file zip
+    string passwordflie="D:/testzip/bungnotohop.txt";
 
+    auto start = chrono::high_resolution_clock::now();
+
+    matkhautudanhsach(filezip, passwordflie);
+
+
+    //dem thoi gian
+     auto end = chrono::high_resolution_clock::now();
+
+     chrono::duration<double> duration = end - start;
+
+     std::cout << duration.count() << std::endl;
 }
