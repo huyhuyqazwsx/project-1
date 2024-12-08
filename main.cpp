@@ -10,7 +10,7 @@ using namespace std;
 
 atomic<bool> passwordFound(false);
 
-bool trypass(string &filezip, string &password) {
+bool trypass(string &filezip,string &password) {
     //unzOpen su dung bien *char nen phai su dung c_str()
     unzFile file =unzOpen(filezip.c_str());
 
@@ -62,7 +62,7 @@ void matkhautudanhsach(string &filezip, string &passwordfile) {
             if (passwordFound.load()) {
                 break;
             }
-            cout <<line<<endl;
+            // cout <<line<<endl;
             trypass(filezip, line);
         }
         file.close();
@@ -70,7 +70,7 @@ void matkhautudanhsach(string &filezip, string &passwordfile) {
 }
 
 int main() {
-    string filezip="D:/testzip/huy.zip"; //duong dan file zip
+    string filezip="D:/testzip/h.zip"; //duong dan file zip
     string passwordflie="D:/testzip/bungnotohop.txt";
 
     auto start = chrono::high_resolution_clock::now();
@@ -81,7 +81,7 @@ int main() {
     //dem thoi gian
      auto end = chrono::high_resolution_clock::now();
 
-     chrono::duration<double> duration = end - start;
+     chrono::duration<double> diff = end - start;
 
-     std::cout << duration.count() << std::endl;
+     std::cout << diff.count() << std::endl;
 }
