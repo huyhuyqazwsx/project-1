@@ -71,7 +71,7 @@ void matkhautudanhsach(string &filezip, string &passwordfile) {
 }
 
 int main() {
-    string filezip="D:/testzip/bungnotohop.zip"; //duong dan file zip
+    string filezip="D:/testzip/h.zip"; //duong dan file zip
     string passwordflie="D:/testzip/bungnotohop.txt";
 
     auto start = chrono::high_resolution_clock::now();
