@@ -56,7 +56,7 @@ void getpassword(string &zipfile,string &passwordfile) {
 
     while (getline(file,password)) {
         if (check.load()) {
-            break;
+            return;
         }
         // cout<<password<<endl;
         trypass(zipfile,password);
