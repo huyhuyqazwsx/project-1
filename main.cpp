@@ -49,6 +49,8 @@ void getpassword(string &zipfile,string &passwordfile) {
     ifstream file(passwordfile.c_str());
     string password;
 
+    if (file.is_open()!=true) return;
+
     while (getline(file,password)) {
         if (check.load()) break;
         // cout<<password<<endl;
