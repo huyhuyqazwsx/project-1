@@ -1,88 +1,74 @@
 #include <iostream>
 #include <minizip/unzip.h>
-#include <string>
 #include <zlib.h>
 #include <atomic>
 #include <fstream>
 #include <chrono>
-
 using namespace std;
 
-atomic<bool> passwordFound(false);
+atomic<bool> check(false);
 
-bool trypass(string &filezip,string &password) {
-    //unzOpen su dung bien *char nen phai su dung c_str()
-    unzFile file =unzOpen(filezip.c_str());
+void trypass(string &zipfile, string &password) {
+    unzFile file=unzOpen(zipfile.c_str())    ;
 
-    //Neu khong mo duoc file zip
     if (file == NULL) {
-        cout<<"Loi khong mo duoc file";
-        return false;
+        cout<<"Khong mo duoc file zip"<<endl;
+        return;
     }
-    //neu zip rong hoac loi khi mo
-    if (unzGoToFirstFile(file)!=UNZ_OK) {
-        cout<<"khong mo duoc file";
-        unzClose(file);
-        return false;
+
+    if (unzGoToFirstFile(file) != UNZ_OK) {
+        cout<<"File rong hoac loi file";
+        return;
     }
-    //thu mo file voi mat khau
-    if (unzOpenCurrentFilePassword(file , password.c_str())==UNZ_OK) {
-        // cout <<password<<endl;
-        char dem[1024];//moi lan doc toi da 1024 byte
-        int bytesread=0;//so luong byte dang co
+
+    if (unzOpenCurrentFilePassword(file, password.c_str())==UNZ_OK) {
+        char dem[1024];
+        int bytetoread= unzReadCurrentFile(file, dem, sizeof(dem));
         long long crc=0;
-
-        //ham kiem tra crc
-        //unzReadCurrentFile==0 tuc la da doc het file
-        while ((bytesread=unzReadCurrentFile(file, dem, sizeof(dem)))>0) {
-            crc=crc32(crc, (unsigned char*) dem , bytesread);
+        while (bytetoread > 0) {
+            crc= crc32(crc, (unsigned char *)dem, bytetoread);
+            bytetoread= unzReadCurrentFile(file, dem, sizeof(dem));
         }
 
-        unz_file_info fileinfo;//ghi thuoc tinh file
-
-        if (unzGetCurrentFileInfo(file, &fileinfo,nullptr,0,nullptr,0,nullptr,0) == UNZ_OK) {
-            if (fileinfo.crc==crc) {
-                cout<<"Tim thay mat khau: "<<password<<endl;
-                passwordFound.store(true);//da tim thay
-                unzCloseCurrentFile(file);
-                unzClose(file);
-                return true;
-            }
+        unz_file_info file_info;
+        unzGetCurrentFileInfo(file, &file_info,NULL,0,NULL,0,NULL,0);
+        if (file_info.crc==crc) {
+            cout<<"Mat khau tim duoc: "<<password<<endl;
+            check.store(true);
+            unzCloseCurrentFile(file);
+            unzClose(file);
+            return;
         }
     }
+
     unzClose(file);
-    return false;
+
 }
 
-void matkhautudanhsach(string &filezip, string &passwordfile) {
-    ifstream file(passwordfile);
+void getpassword(string &zipfile,string &passwordfile) {
+    ifstream file(passwordfile.c_str());
+    string password;
 
-    if (file.is_open()) {
-        string line;
-        while (getline(file, line)) {
-            if (passwordFound.load()) {
-                break;
-            }
-
-            trypass(filezip, line);
-        }
-        file.close();
+    while (getline(file,password)) {
+        if (check.load()) break;
+        // cout<<password<<endl;
+        trypass(zipfile,password);
     }
+
 }
 
 int main() {
-    string filezip="D:/testzip/h.zip"; //duong dan file zip
-    string passwordflie="D:/testzip/bungnotohop.txt";
-
-    auto start = chrono::high_resolution_clock::now();
-
-    matkhautudanhsach(filezip, passwordflie);
+    string zipfile = "D:/testzip/huy.zip"; // duong dan
+    string passwordfile = "D:/testzip/bungnotohop.txt";// dung dan file mat khau
 
 
-    //dem thoi gian
-     auto end = chrono::high_resolution_clock::now();
+    auto start = chrono:: high_resolution_clock::now();
 
-     chrono::duration<double> diff = end - start;
+    getpassword(zipfile,passwordfile);
 
-     std::cout << diff.count() << std::endl;
+    auto end = chrono::high_resolution_clock::now();
+
+    chrono::duration<double> diff = end - start;
+    cout << diff.count() << endl;
+
 }
