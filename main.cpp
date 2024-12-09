@@ -49,18 +49,26 @@ void getpassword(string &zipfile,string &passwordfile) {
     ifstream file(passwordfile.c_str());
     string password;
 
-    if (file.is_open()!=true) return;
+    if (file.is_open()!=true) {
+        cout<<"Khong mo duoc file txt"<<endl;
+        return;
+    }
 
     while (getline(file,password)) {
-        if (check.load()) break;
+        if (check.load()) {
+            file.close();
+            return;
+        }
         // cout<<password<<endl;
         trypass(zipfile,password);
     }
 
+    cout<<"Khong tim thay mat khau"<<endl;
+    file.close();
 }
 
 int main() {
-    string zipfile = "D:/testzip/huy.zip"; // duong dan
+    string zipfile = "D:/testzip/huytestZZZZ.zip"; // duong dan
     string passwordfile = "D:/testzip/bungnotohop.txt";// dung dan file mat khau
 
 
@@ -71,6 +79,6 @@ int main() {
     auto end = chrono::high_resolution_clock::now();
 
     chrono::duration<double> diff = end - start;
-    cout << diff.count() << endl;
+    cout << "Thoi gian giai ma: " << diff.count() << " s" << endl;
 
 }
