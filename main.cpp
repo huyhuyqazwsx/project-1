@@ -77,17 +77,15 @@ void trypass(string zipfile, long long start_index, int numthread, long long max
                 bytes_read = unzReadCurrentFile(file, buffer, sizeof(buffer));
             }
 
-            if (file_info.crc != crc) {
+            if (file_info.crc == crc) {
+                check.store(true);
+                cout << "Mat khau tim duoc: " << password << endl;
                 unzCloseCurrentFile(file);
-                continue;
+                unzClose(file);
+                deleteFile(copyfile); // Xóa file sao chép sau khi tìm được mật khẩu
+                return;
             }
-
-            check.store(true);
-            cout << "Mat khau tim duoc: " << password << endl;
             unzCloseCurrentFile(file);
-            unzClose(file);
-            deleteFile(copyfile); // Xóa file sao chép sau khi tìm được mật khẩu
-            return;
         }
         unzCloseCurrentFile(file);
     }
