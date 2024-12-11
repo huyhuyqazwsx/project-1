@@ -4,11 +4,16 @@
 #include <atomic>
 #include <chrono>
 #include <thread>
+#include <fstream>
+#include <filesystem>
+
 using namespace std;
+
+namespace fs = std::filesystem;
 
 atomic<bool> check(false);
 
-string indextranfer(string passwordtext, long long i){
+string indextranfer(string passwordtext, long long i) {
     long long size = passwordtext.size();
     string mid = "";
     while (i != 0) {
@@ -20,18 +25,41 @@ string indextranfer(string passwordtext, long long i){
     return mid;
 }
 
-void trypass(string zipfile, long long start_index, int numthread, long long maxindex, string passwordtext) {
-    unzFile file = unzOpen(zipfile.c_str());
+// Hàm sao chép file zip
+void copyFile(const string& source, const string& destination) {
+    ifstream src(source, ios::binary);
+    ofstream dst(destination, ios::binary);
+    dst << src.rdbuf();
+}
 
+// Hàm xóa file tạm
+void deleteFile(const string& filepath) {
+    if (fs::exists(filepath)) {
+        fs::remove(filepath);
+    }
+}
+
+void trypass(string zipfile, long long start_index, int numthread, long long maxindex, string passwordtext) {
+    string copyfile = "copy_" + to_string(start_index) + ".zip"; // Tạo bản sao của file zip cho mỗi luồng
+    copyFile(zipfile, copyfile); // Sao chép file zip
+
+    unzFile file = unzOpen(copyfile.c_str()); // Mở bản sao file zip
     if (file == NULL) {
         cout << "Khong mo duoc file zip" << endl;
+        deleteFile(copyfile); // Xóa file sao chép nếu không mở được
         return;
     }
 
     if (unzGoToFirstFile(file) != UNZ_OK) {
         cout << "File rong hoac loi file";
+        deleteFile(copyfile); // Xóa file sao chép nếu không thể truy cập file
         return;
     }
+
+    //lay thog tin crc32
+    unz_file_info file_info;
+    unzGetCurrentFileInfo(file, &file_info, NULL, 0, NULL, 0, NULL, 0);
+
 
     // Kiểm tra mật khẩu
     while (!check.load() && start_index < maxindex) {
@@ -49,13 +77,12 @@ void trypass(string zipfile, long long start_index, int numthread, long long max
                 bytes_read = unzReadCurrentFile(file, buffer, sizeof(buffer));
             }
 
-            unz_file_info file_info;
-            unzGetCurrentFileInfo(file, &file_info, NULL, 0, NULL, 0, NULL, 0);
             if (file_info.crc == crc) {
                 cout << "Mat khau tim duoc: " << password << endl;
                 check.store(true);
                 unzCloseCurrentFile(file);
                 unzClose(file);
+                deleteFile(copyfile); // Xóa file sao chép sau khi tìm được mật khẩu
                 return;
             }
             unzCloseCurrentFile(file);
@@ -63,6 +90,7 @@ void trypass(string zipfile, long long start_index, int numthread, long long max
         unzCloseCurrentFile(file);
     }
     unzClose(file);
+    deleteFile(copyfile); // Xóa file sao chép nếu không tìm thấy mật khẩu
 }
 
 int main() {
@@ -73,7 +101,7 @@ int main() {
 
     // Nhập số lượng luồng
     int numthread;
-    cout << "Nhap so luong muon chay: ";
+    cout << "Nhap so luong muon chay:";
     cin >> numthread;
 
     int passwordlength = passwordtext.length();
