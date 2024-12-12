@@ -66,21 +66,16 @@ void deleteFile(const string& filepath) {
 
 //Thu mat khau bang bung no to hop
 void TryPassWithBruteForce(string zipfile, long long start_index, int numthread, long long maxindex, string passwordtext) {
-    string copyfile = "copy_" + to_string(start_index) + ".zip"; // Tạo bản sao của file zip cho mỗi luồng
-    copyFile(zipfile, copyfile); // Sao chép file zip
-
-    unzFile file = unzOpen(copyfile.c_str());
+    unzFile file = unzOpen(zipfile.c_str());
 
     //mo file zip
     if (file == NULL) {
         cout << "Khong mo duoc file zip" << endl;
-        deleteFile(copyfile);
         return;
     }
     //mo file dau tien
     if (unzGoToFirstFile(file) != UNZ_OK) {
         cout << "File rong hoac loi file";
-        deleteFile(copyfile);
         return;
     }
 
@@ -110,7 +105,6 @@ void TryPassWithBruteForce(string zipfile, long long start_index, int numthread,
                 cout << "Mat khau tim duoc: " << password << endl;
                 unzCloseCurrentFile(file);
                 unzClose(file);
-                deleteFile(copyfile); // Xóa file sao chép sau khi tìm được mật khẩu
                 return;
             }
             unzCloseCurrentFile(file);
@@ -118,7 +112,6 @@ void TryPassWithBruteForce(string zipfile, long long start_index, int numthread,
         unzCloseCurrentFile(file);
     }
     unzClose(file);
-    deleteFile(copyfile); // Xóa file sao chép nếu không tìm thấy mật khẩu
 }
 
 int main() {
@@ -130,11 +123,19 @@ int main() {
 
     vector<thread> threads;
     for (int i = 0; i < numthread; i++) {
-        threads.emplace_back(TryPassWithBruteForce, zipfile, i, numthread, maxindex, passwordtext);
+        string copyfile = "copy_" + to_string(i) + ".zip"; // Tạo bản sao của file zip cho mỗi luồng
+        copyFile(zipfile, copyfile); // Sao chép file zip
+
+        threads.emplace_back(TryPassWithBruteForce, copyfile, i, numthread, maxindex, passwordtext);
     }
 
     for (auto &th : threads) {
         th.join();
+    }
+
+    for (int i = 0; i < numthread; i++) {
+        string copyfile = "copy_" + to_string(i) + ".zip";
+        deleteFile(copyfile);
     }
 
     auto end = chrono::high_resolution_clock::now();
