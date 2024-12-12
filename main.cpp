@@ -9,7 +9,27 @@
 
 using namespace std;
 
-atomic<bool> check(false);
+atomic<bool> check(false);// Co hieu
+
+string const passwordtext = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+int numpassword = 0; // do dai mat khau
+int numthread = 1; //so luong
+int passwordlength = 0;
+long long maxindex=0;
+string zipfile = "D:/testzip/huytestZZZZ.zip"; // Đường dẫn
+
+void input() {
+    // Nhập du lieu vao
+    cout << "Nhap do dai mat khau muon thu: " << endl;
+    cin>>numpassword;
+
+    cout << "Nhap so luong ban muon thuc hien chuong trinh (luong toi da la 12): " << endl;
+    cin>>numthread;
+
+    //Xu ly sau nhap lieu
+    passwordlength = passwordtext.length(); //do dai khong gian ky tu
+    maxindex = pow(passwordlength, numpassword); // khong gian mat khau
+}
 
 string indexTransfer(string &passwordtext, long long i) {
     long long size = passwordtext.size();
@@ -94,23 +114,13 @@ void TryPass(string zipfile, long long start_index, int numthread, long long max
 }
 
 int main() {
-    string zipfile = "D:/testzip/huytestZZZZ.zip"; // Đường dẫn
-    string const passwordtext = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-
-    int numpassword = 4;
-
-    // Nhập số lượng luồng
-    int numthread;
-    cout << "Nhap so luong muon chay:";
-    cin >> numthread;
-
-    int passwordlength = passwordtext.length();
-    long long maxindex = pow(passwordlength, numpassword);
-
-    cout << "Bat dau chuong trinh:" << endl;
-    auto start = chrono::high_resolution_clock::now();
+    input();
 
     // Chạy chương trình với nhiều luồng
+    cout << "Bat dau chuong trinh:" << endl;
+
+    auto start = chrono::high_resolution_clock::now();
+
     vector<thread> threads;
     for (int i = 0; i < numthread; i++) {
         threads.emplace_back(TryPass, zipfile, i, numthread, maxindex, passwordtext);
@@ -121,6 +131,7 @@ int main() {
     }
 
     auto end = chrono::high_resolution_clock::now();
+
     chrono::duration<double> diff = end - start;
 
     if (!check.load()) cout << "Khong tim thay mat khau" << endl;
