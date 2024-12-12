@@ -36,6 +36,7 @@ void input() {
     cout << "Bat dau chuong trinh:" << endl;
 }
 
+//Chuyen doi index sang password
 string indexTransfer(string &passwordtext, long long i) {
     long long size = passwordtext.size();
     long long index = 0;
@@ -63,6 +64,7 @@ void deleteFile(const string& filepath) {
     }
 }
 
+//Thu mat khau bang bung no to hop
 void TryPassWithBruteForce(string zipfile, long long start_index, int numthread, long long maxindex, string passwordtext) {
     string copyfile = "copy_" + to_string(start_index) + ".zip"; // Tạo bản sao của file zip cho mỗi luồng
     copyFile(zipfile, copyfile); // Sao chép file zip
