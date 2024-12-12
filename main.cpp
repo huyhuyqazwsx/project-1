@@ -32,6 +32,8 @@ void input() {
     //Xu ly sau nhap lieu
     passwordlength = passwordtext.length();
     maxindex = pow(passwordlength, numpassword);
+
+    cout << "Bat dau chuong trinh:" << endl;
 }
 
 string indexTransfer(string &passwordtext, long long i) {
@@ -86,6 +88,7 @@ void TryPass(string zipfile, long long start_index, int numthread, long long max
 
     // Kiểm tra mật khẩu
     while (!check.load() && start_index < maxindex) {
+
         string password = indexTransfer(passwordtext, start_index);
         start_index += numthread;
 
@@ -120,8 +123,6 @@ int main() {
     input();
 
     // Chạy chương trình với nhiều luồng
-    cout << "Bat dau chuong trinh:" << endl;
-
     auto start = chrono::high_resolution_clock::now();
 
     vector<thread> threads;
