@@ -23,7 +23,7 @@ void input() {
     cout<<"Nhap duong dan file zip: "<<endl;
     getline(cin, zipfile);
 
-    cout << "Nhap do dai mat khau muon thu: " << endl;
+    cout << "Nhap do dai toi da mat khau muon thu: " << endl;
     cin>>numpassword;
 
     cout << "Nhap so luong ban muon thuc hien chuong trinh (luong toi da la 12): " << endl;
