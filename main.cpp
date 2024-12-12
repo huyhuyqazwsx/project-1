@@ -63,7 +63,7 @@ void deleteFile(const string& filepath) {
     }
 }
 
-void TryPass(string zipfile, long long start_index, int numthread, long long maxindex, string passwordtext) {
+void TryPassWithBruteForce(string zipfile, long long start_index, int numthread, long long maxindex, string passwordtext) {
     string copyfile = "copy_" + to_string(start_index) + ".zip"; // Tạo bản sao của file zip cho mỗi luồng
     copyFile(zipfile, copyfile); // Sao chép file zip
 
@@ -88,7 +88,7 @@ void TryPass(string zipfile, long long start_index, int numthread, long long max
 
     // Kiểm tra mật khẩu
     while (!check.load() && start_index < maxindex) {
-
+        //lay mat khau
         string password = indexTransfer(passwordtext, start_index);
         start_index += numthread;
 
@@ -127,7 +127,7 @@ int main() {
 
     vector<thread> threads;
     for (int i = 0; i < numthread; i++) {
-        threads.emplace_back(TryPass, zipfile, i, numthread, maxindex, passwordtext);
+        threads.emplace_back(TryPassWithBruteForce, zipfile, i, numthread, maxindex, passwordtext);
     }
 
     for (auto &th : threads) {
