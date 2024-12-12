@@ -122,6 +122,7 @@ void TryPassWithBruteForce(string zipfile, long long start_index, int numthread,
 }
 
 int main() {
+    //Nhap du lieu
     input();
 
     // Chạy chương trình với nhiều luồng
