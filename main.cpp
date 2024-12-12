@@ -14,12 +14,15 @@ atomic<bool> check(false);// Co hieu
 string const passwordtext = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 int numpassword = 0; // do dai mat khau
 int numthread = 1; //so luong
-int passwordlength = 0;
-long long maxindex=0;
-string zipfile = "D:/testzip/huytestZZZZ.zip"; // Đường dẫn
+int passwordlength = 0; //do dai khong gian ky tu
+long long maxindex=0; // khong gian mat khau
+string zipfile; // Đường dẫn
 
 void input() {
     // Nhập du lieu vao
+    cout<<"Nhap duong dan file zip: "<<endl;
+    getline(cin, zipfile);
+
     cout << "Nhap do dai mat khau muon thu: " << endl;
     cin>>numpassword;
 
@@ -27,8 +30,8 @@ void input() {
     cin>>numthread;
 
     //Xu ly sau nhap lieu
-    passwordlength = passwordtext.length(); //do dai khong gian ky tu
-    maxindex = pow(passwordlength, numpassword); // khong gian mat khau
+    passwordlength = passwordtext.length();
+    maxindex = pow(passwordlength, numpassword);
 }
 
 string indexTransfer(string &passwordtext, long long i) {
