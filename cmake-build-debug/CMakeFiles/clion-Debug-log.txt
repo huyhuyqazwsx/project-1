@@ -1,4 +1,4 @@
-"C:\Program Files\JetBrains\CLion 2024.3\bin\cmake\win\x64\bin\cmake.exe" -DCMAKE_BUILD_TYPE=Debug -DCMAKE_TOOLCHAIN_FILE=C:\Users\HUY\.vcpkg-clion\vcpkg\scripts\buildsystems\vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-mingw-dynamic -G "MinGW Makefiles" -S C:\Users\HUY\CLionProjects\p -B C:\Users\HUY\CLionProjects\p\cmake-build-debug
+"C:\Program Files\JetBrains\CLion 2024.3\bin\cmake\win\x64\bin\cmake.exe" -DCMAKE_BUILD_TYPE=Debug -DCMAKE_TOOLCHAIN_FILE=C:\Users\HUY\.vcpkg-clion\vcpkg\scripts\buildsystems\vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-mingw-dynamic -G "MinGW Makefiles" -S C:\Users\HUY\CLionProjects\test -B C:\Users\HUY\CLionProjects\test\cmake-build-debug
 -- The C compiler identification is GNU 12.1.0
 -- The CXX compiler identification is GNU 12.1.0
 -- Detecting C compiler ABI info
@@ -16,6 +16,6 @@
 -- Found BZip2: optimized;C:/Users/HUY/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libbz2.dll.a;debug;C:/Users/HUY/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/debug/lib/libbz2d.dll.a (found version "1.0.8")
 -- Looking for BZ2_bzCompressInit
 -- Looking for BZ2_bzCompressInit - found
--- Configuring done (3.3s)
+-- Configuring done (3.5s)
 -- Generating done (0.0s)
--- Build files have been written to: C:/Users/HUY/CLionProjects/p/cmake-build-debug
+-- Build files have been written to: C:/Users/HUY/CLionProjects/test/cmake-build-debug

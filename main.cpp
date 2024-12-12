@@ -9,15 +9,14 @@
 
 using namespace std;
 
-namespace fs = std::filesystem;
-
 atomic<bool> check(false);
 
-string indextranfer(string passwordtext, long long i) {
+string indexTransfer(string &passwordtext, long long i) {
     long long size = passwordtext.size();
+    long long index = 0;
     string mid = "";
     while (i != 0) {
-        long long index = i % size;
+        index = i % size;
         mid += passwordtext[index];
         i = i / size;
     }
@@ -34,25 +33,27 @@ void copyFile(const string& source, const string& destination) {
 
 // Hàm xóa file tạm
 void deleteFile(const string& filepath) {
-    if (fs::exists(filepath)) {
-        fs::remove(filepath);
+    if (filesystem::exists(filepath)) {
+        filesystem::remove(filepath);
     }
 }
 
-void trypass(string zipfile, long long start_index, int numthread, long long maxindex, string passwordtext) {
+void TryPass(string zipfile, long long start_index, int numthread, long long maxindex, string passwordtext) {
     string copyfile = "copy_" + to_string(start_index) + ".zip"; // Tạo bản sao của file zip cho mỗi luồng
     copyFile(zipfile, copyfile); // Sao chép file zip
 
-    unzFile file = unzOpen(copyfile.c_str()); // Mở bản sao file zip
+    unzFile file = unzOpen(copyfile.c_str());
+
+    //mo file zip
     if (file == NULL) {
         cout << "Khong mo duoc file zip" << endl;
-        deleteFile(copyfile); // Xóa file sao chép nếu không mở được
+        deleteFile(copyfile);
         return;
     }
-
+    //mo file dau tien
     if (unzGoToFirstFile(file) != UNZ_OK) {
         cout << "File rong hoac loi file";
-        deleteFile(copyfile); // Xóa file sao chép nếu không thể truy cập file
+        deleteFile(copyfile);
         return;
     }
 
@@ -60,10 +61,9 @@ void trypass(string zipfile, long long start_index, int numthread, long long max
     unz_file_info file_info;
     unzGetCurrentFileInfo(file, &file_info, NULL, 0, NULL, 0, NULL, 0);
 
-
     // Kiểm tra mật khẩu
     while (!check.load() && start_index < maxindex) {
-        string password = indextranfer(passwordtext, start_index);
+        string password = indexTransfer(passwordtext, start_index);
         start_index += numthread;
 
         if (unzOpenCurrentFilePassword(file, password.c_str()) == UNZ_OK) {
@@ -95,7 +95,7 @@ void trypass(string zipfile, long long start_index, int numthread, long long max
 
 int main() {
     string zipfile = "D:/testzip/huytestZZZZ.zip"; // Đường dẫn
-    string passwordtext = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    string const passwordtext = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
     int numpassword = 4;
 
@@ -113,7 +113,7 @@ int main() {
     // Chạy chương trình với nhiều luồng
     vector<thread> threads;
     for (int i = 0; i < numthread; i++) {
-        threads.emplace_back(trypass, zipfile, i, numthread, maxindex, passwordtext);
+        threads.emplace_back(TryPass, zipfile, i, numthread, maxindex, passwordtext);
     }
 
     for (auto &th : threads) {
