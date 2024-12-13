@@ -91,7 +91,10 @@ void TryPassWithBruteForce(string zipfile, long long start_index, int numthread,
 
     //lay thog tin crc32
     unz_file_info file_info;
-    unzGetCurrentFileInfo(file, &file_info, NULL, 0, NULL, 0, NULL, 0);
+    if (unzGetCurrentFileInfo(file, &file_info, NULL, 0, NULL, 0, NULL, 0)!=UNZ_OK) {
+        unzClose(file);
+        return;
+    }
 
     // Kiểm tra mật khẩu
     while (!check.load() && start_index < maxindex) {

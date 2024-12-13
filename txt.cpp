@@ -86,7 +86,7 @@ void workerThread(const string& zipfile, const string& dictionaryFile, int threa
     unzClose(file);
 
     // Đọc từ file từ điển và chỉ xử lý các dòng thuộc về luồng hiện tại
-    while (getline(infile, line)) {
+    while (infile>>line) {
         if (lineIndex % numThreads == threadID) {
             passwords.push_back(line);
         }
