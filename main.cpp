@@ -16,8 +16,25 @@ int numpassword = 0; // do dai mat khau
 int numthread = 1; //so luong
 int passwordlength = 0; //do dai khong gian ky tu
 long long maxindex=0; // khong gian mat khau
+
+string copyfile[100]; //Toi da 100 file zip copy
 string zipfile; // Đường dẫn
 
+// Hàm sao chép file zip
+void copyFile(const string& source, const string& destination) {
+    ifstream src(source, ios::binary);
+    ofstream dst(destination, ios::binary);
+    dst << src.rdbuf();
+}
+
+// Hàm xóa file tạm
+void deleteFile(const string& filepath) {
+    if (filesystem::exists(filepath)) {
+        filesystem::remove(filepath);
+    }
+}
+
+//Nhap lieu
 void input() {
     // Nhập du lieu vao
     cout<<"Nhap duong dan file zip: "<<endl;
@@ -32,6 +49,12 @@ void input() {
     //Xu ly sau nhap lieu
     passwordlength = passwordtext.length();
     maxindex = pow(passwordlength, numpassword);
+
+    //tao ban sao zip
+    for(int i = 0; i < numthread; i++) {
+        copyfile[i] = "copy_" + to_string(i) + ".zip"; // Tạo bản sao của file zip cho mỗi luồng
+        copyFile(zipfile, copyfile[i]); // Sao chép file zip
+    }
 
     cout << "Bat dau chuong trinh:" << endl;
 }
@@ -50,22 +73,9 @@ string indexTransfer(string &passwordtext, long long i) {
     return mid;
 }
 
-// Hàm sao chép file zip
-void copyFile(const string& source, const string& destination) {
-    ifstream src(source, ios::binary);
-    ofstream dst(destination, ios::binary);
-    dst << src.rdbuf();
-}
-
-// Hàm xóa file tạm
-void deleteFile(const string& filepath) {
-    if (filesystem::exists(filepath)) {
-        filesystem::remove(filepath);
-    }
-}
-
 //Thu mat khau bang bung no to hop
 void TryPassWithBruteForce(string zipfile, long long start_index, int numthread, long long maxindex, string passwordtext) {
+
     unzFile file = unzOpen(zipfile.c_str());
 
     //mo file zip
@@ -91,7 +101,7 @@ void TryPassWithBruteForce(string zipfile, long long start_index, int numthread,
 
         if (unzOpenCurrentFilePassword(file, password.c_str()) == UNZ_OK) {
             // Đọc dữ liệu và kiểm tra CRC
-            char buffer[1024];
+            char buffer[1024]; //Doc moi lan 1 kb
             int bytes_read = unzReadCurrentFile(file, buffer, sizeof(buffer));
             long long crc = 0;
 
@@ -123,10 +133,7 @@ int main() {
 
     vector<thread> threads;
     for (int i = 0; i < numthread; i++) {
-        string copyfile = "copy_" + to_string(i) + ".zip"; // Tạo bản sao của file zip cho mỗi luồng
-        copyFile(zipfile, copyfile); // Sao chép file zip
-
-        threads.emplace_back(TryPassWithBruteForce, copyfile, i, numthread, maxindex, passwordtext);
+        threads.emplace_back(TryPassWithBruteForce, copyfile[i], i, numthread, maxindex, passwordtext);
     }
 
     for (auto &th : threads) {
