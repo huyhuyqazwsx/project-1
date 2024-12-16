@@ -6,16 +6,20 @@
 #include <thread>
 #include <fstream>
 #include <filesystem>
+#include <windows.h>
 
 using namespace std;
 
 atomic<bool> check(false);// Co hieu
+
+DWORD_PTR affinity_mask ; //Mac dinh su dung 12 cpu
 
 string const passwordtext = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 int numpassword = 0; // do dai mat khau
 int numthread = 1; //so luong
 int passwordlength = 0; //do dai khong gian ky tu
 long long maxindex=0; // khong gian mat khau
+bool checkTuDien= false;
 
 string copyfile[100]; //Toi da 100 file zip copy
 string zipfile; // Đường dẫn
@@ -46,6 +50,22 @@ void input() {
     cout << "Nhap so luong ban muon thuc hien chuong trinh (luong toi da la 12): " << endl;
     cin>>numthread;
 
+    cout<< "Chon che do chay chuong trinh"<<endl;
+    cout<< "1. Hieu suat toi da (12 cpu)"<<endl;;
+    cout<< "2. Hieu suat trung binh (6 cpu)"<<endl;
+    cout<< "3. Hieu suat thap (2 cpu)"<<endl;
+    int mid;
+    cin>>mid;
+    if (mid == 1) {
+        affinity_mask = 0b111111111111;
+    }
+    else if (mid == 2) {
+        affinity_mask = 0b101010101010;// mac dinh cpu 1 , 3 , 5 , 7 , 9 , 11
+    }
+    else if (mid == 3) {
+        affinity_mask = 0b000000010100;// mac dinh 2, 4
+    }
+
     //Xu ly sau nhap lieu
     passwordlength = passwordtext.length();
     maxindex = pow(passwordlength, numpassword);
@@ -75,7 +95,6 @@ string indexTransfer(string &passwordtext, long long i) {
 
 //Thu mat khau bang bung no to hop
 void TryPassWithBruteForce(string zipfile, long long start_index, int numthread, long long maxindex, string passwordtext) {
-
     unzFile file = unzOpen(zipfile.c_str());
 
     //mo file zip
@@ -127,10 +146,19 @@ void TryPassWithBruteForce(string zipfile, long long start_index, int numthread,
     unzClose(file);
 }
 
-int main() {
-    //Nhap du lieu
-    input();
+void kiemsoatCPU() {
 
+    // Lay handle cua tien trinh hien tai
+    HANDLE process = GetCurrentProcess();
+
+    // Thiết lập CPU affinity cho tiến trình
+    if (!SetProcessAffinityMask(process, affinity_mask)) {
+        cout << "Loi khi thao tac tai nguyen cpu "<<endl;
+        cout << "Chay mac dinh voi hieu suat toi da" << endl;
+    }
+}
+
+void start() {
     // Chạy chương trình với nhiều luồng
     auto start = chrono::high_resolution_clock::now();
 
@@ -156,5 +184,15 @@ int main() {
 
     cout << "Thoi gian giai ma: " << diff.count() << " s" << endl;
 
-    return 0;
+}
+
+int main() {
+    //Nhap du lieu
+    input();
+
+    //Dieu chinh tai nguyen cpu
+    kiemsoatCPU();
+
+    //Bat dau chuong trinh
+    start();
 }
