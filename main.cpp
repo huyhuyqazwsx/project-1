@@ -26,9 +26,13 @@ string zipfile; // Đường dẫn
 
 // Hàm sao chép file zip
 void copyFile(const string& source, const string& destination) {
-    ifstream src(source, ios::binary);
-    ofstream dst(destination, ios::binary);
-    dst << src.rdbuf();
+    string command = "copy \"" + source + "\" \"" + destination + "\" /Y";
+    int result =system(command.c_str());
+
+    // Kiểm tra kết quả thực thi
+    if (result != 0) {
+        throw std::runtime_error("Failed to copy file: " + source + " to " + destination);
+    }
 }
 
 // Hàm xóa file tạm
@@ -146,7 +150,7 @@ void TryPassWithBruteForce(string zipfile, long long start_index, int numthread,
     unzClose(file);
 }
 
-void kiemsoatCPU() {
+void KiemSoatCPU() {
 
     // Lay handle cua tien trinh hien tai
     HANDLE process = GetCurrentProcess();
@@ -195,4 +199,6 @@ int main() {
 
     //Bat dau chuong trinh
     start();
+
+
 }
