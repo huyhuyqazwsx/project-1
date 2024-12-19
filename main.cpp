@@ -7,19 +7,26 @@
 #include <fstream>
 #include <filesystem>
 #include <windows.h>
+#include <csignal>
+#include <conio.h>
 
 using namespace std;
 
-atomic<bool> check(false);// Co hieu
+atomic<bool> check(false);// Co hieu mat khau
+atomic<bool> exiting(false); // Co hieu thoat
+
+vector<thread> threads;
 
 DWORD_PTR affinity_mask ; //Mac dinh su dung 12 cpu
 
-string const passwordtext = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+string passwordtext = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 int numpassword = 0; // do dai mat khau
 int numthread = 1; //so luong
 int passwordlength = 0; //do dai khong gian ky tu
 long long maxindex=0; // khong gian mat khau
+long long LastIndex=0; //Diem cuoi cung duoc doc
 bool checkTuDien= false;
+set<long long> LastPoint;
 
 string copyfile[100]; //Toi da 100 file zip copy
 string zipfile; // Đường dẫn
@@ -68,6 +75,26 @@ void input() {
     }
     else if (mid == 3) {
         affinity_mask = 0b000000010100;// mac dinh 2, 4
+    }
+
+    ifstream inputFile("LastPoint.txt");
+    if (inputFile.is_open()) {
+        string mid ;
+        getline(inputFile, mid);
+        long long num= stoll(mid);
+        getline(inputFile, mid);
+        cout << "Ban co muon tiep tuc tu lan duyet truoc tai vi tri " << num << " voi gia tri la " << mid << endl;
+        cout << "Y/N"<<endl;
+        cin>>mid;
+        if(mid == "Y") {
+            LastIndex = num;
+            inputFile.close();
+        }
+        else if (mid == "N") {
+            cout<< "Chuong trinh se chay tu dau" <<endl;
+            inputFile.close();
+            deleteFile("LastPoint.txt");
+        }
     }
 
     //Xu ly sau nhap lieu
@@ -120,7 +147,7 @@ void TryPassWithBruteForce(string zipfile, long long start_index, int numthread,
     }
 
     // Kiểm tra mật khẩu
-    while (!check.load() && start_index < maxindex) {
+    while ((!check.load() && start_index < maxindex) && !exiting.load() ) {
         //lay mat khau
         string password = indexTransfer(passwordtext, start_index);
         start_index += numthread;
@@ -141,11 +168,15 @@ void TryPassWithBruteForce(string zipfile, long long start_index, int numthread,
                 cout << "Mat khau tim duoc: " << password << endl;
                 unzCloseCurrentFile(file);
                 unzClose(file);
+                deleteFile("LastPoint.txt");
                 return;
             }
             unzCloseCurrentFile(file);
         }
         unzCloseCurrentFile(file);
+    }
+    if (exiting.load()) {
+        LastPoint.insert(start_index);
     }
     unzClose(file);
 }
@@ -162,14 +193,33 @@ void kiemsoatCPU() {
     }
 }
 
+void KiemTraDung() {
+    cout << "Nhan F de tam dung chuong trinh neu muon"<<endl;
+    string exit;
+    while (!check.load()) {
+        if (_kbhit()) {
+            char ch = _getch();  // lay ki tu an
+            if (ch == 'F' || ch == 'f') {
+                exiting.store(true);  // Đặt cờ dừng
+                cout << "Dang dung..." << endl;
+                break;
+            }
+        }
+    }
+
+}
+
 void start() {
     // Chạy chương trình với nhiều luồng
     auto start = chrono::high_resolution_clock::now();
 
-    vector<thread> threads;
     for (int i = 0; i < numthread; i++) {
-        threads.emplace_back(TryPassWithBruteForce, copyfile[i], i, numthread, maxindex, passwordtext);
+        long long mid = LastIndex + i;
+        threads.emplace_back(TryPassWithBruteForce, copyfile[i], mid, numthread, maxindex, passwordtext);
     }
+
+    thread stopThread(KiemTraDung);
+    stopThread.join();
 
     for (auto &th : threads) {
         th.join();
@@ -184,10 +234,22 @@ void start() {
 
     chrono::duration<double> diff = end - start;
 
-    if (!check.load()) cout << "Khong tim thay mat khau" << endl;
+    if (!check.load() && !exiting.load()) cout << "Khong tim thay mat khau" << endl;
+
+    if (exiting.load()) {
+        ofstream fout("LastPoint.txt");
+        long long Point =*LastPoint.begin();
+        string mid = indexTransfer(passwordtext ,Point);
+        fout << Point << endl;
+        fout << mid << endl;
+        fout.close();
+        cout << "Mat khau dung lai tai vi tri "<< mid << endl;
+        cout << "Da luu thong tin last point vao thu muc LastPoint.txt"<<endl;
+    }
+    LastPoint.clear();
+    threads.clear();
 
     cout << "Thoi gian giai ma: " << diff.count() << " s" << endl;
-
 }
 
 int main() {
@@ -200,5 +262,6 @@ int main() {
     //Bat dau chuong trinh
     start();
 
-
+    system("pause");
+    return 0;
 }
