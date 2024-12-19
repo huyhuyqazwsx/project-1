@@ -31,7 +31,7 @@ void copyFile(const string& source, const string& destination) {
 
     // Kiểm tra kết quả thực thi
     if (result != 0) {
-        throw std::runtime_error("Failed to copy file: " + source + " to " + destination);
+        throw runtime_error("Failed to copy file: " + source + " to " + destination);
     }
 }
 
@@ -150,7 +150,7 @@ void TryPassWithBruteForce(string zipfile, long long start_index, int numthread,
     unzClose(file);
 }
 
-void KiemSoatCPU() {
+void kiemsoatCPU() {
 
     // Lay handle cua tien trinh hien tai
     HANDLE process = GetCurrentProcess();
