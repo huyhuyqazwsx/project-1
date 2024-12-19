@@ -61,6 +61,10 @@ void input() {
     cout << "Nhap so luong ban muon thuc hien chuong trinh (luong toi da la 12): " << endl;
     cin>>numthread;
 
+    //Xu ly sau nhap lieu
+    passwordlength = passwordtext.length();
+    maxindex = pow(passwordlength, numpassword);
+
     cout<< "Chon che do chay chuong trinh"<<endl;
     cout<< "1. Hieu suat toi da (12 cpu)"<<endl;;
     cout<< "2. Hieu suat trung binh (6 cpu)"<<endl;
@@ -97,10 +101,6 @@ void input() {
         }
     }
 
-    //Xu ly sau nhap lieu
-    passwordlength = passwordtext.length();
-    maxindex = pow(passwordlength, numpassword);
-
     //tao ban sao zip
     for(int i = 0; i < numthread; i++) {
         copyfile[i] = "copy_" + to_string(i) + ".zip"; // Tạo bản sao của file zip cho mỗi luồng
@@ -108,6 +108,34 @@ void input() {
     }
 
     cout << "Bat dau chuong trinh:" << endl;
+}
+
+void kiemsoatCPU() {
+
+    // Lay handle cua tien trinh hien tai
+    HANDLE process = GetCurrentProcess();
+
+    // Thiết lập CPU affinity cho tiến trình
+    if (!SetProcessAffinityMask(process, affinity_mask)) {
+        cout << "Loi khi thao tac tai nguyen cpu "<<endl;
+        cout << "Chay mac dinh voi hieu suat toi da" << endl;
+    }
+}
+
+void KiemTraDung() {
+    cout << "Nhan F de tam dung chuong trinh neu muon"<<endl;
+    string exit;
+    while (!check.load()) {
+        if (_kbhit()) {
+            char ch = _getch();  // lay ki tu an
+            if (ch == 'F' || ch == 'f') {
+                exiting.store(true);  // Đặt cờ dừng
+                cout << "Dang dung..." << endl;
+                break;
+            }
+        }
+    }
+
 }
 
 //Chuyen doi index sang password
@@ -147,14 +175,14 @@ void TryPassWithBruteForce(string zipfile, long long start_index, int numthread,
     }
 
     // Kiểm tra mật khẩu
-    while ((!check.load() && start_index < maxindex) && !exiting.load() ) {
+    while (!check.load() && (start_index < maxindex) && !exiting.load() ) {
         //lay mat khau
         string password = indexTransfer(passwordtext, start_index);
         start_index += numthread;
 
         if (unzOpenCurrentFilePassword(file, password.c_str()) == UNZ_OK) {
             // Đọc dữ liệu và kiểm tra CRC
-            char buffer[1024]; //Doc moi lan 1 kb
+            char buffer[4096]; //Doc moi lan 4 kb
             int bytes_read = unzReadCurrentFile(file, buffer, sizeof(buffer));
             long long crc = 0;
 
@@ -175,38 +203,12 @@ void TryPassWithBruteForce(string zipfile, long long start_index, int numthread,
         }
         unzCloseCurrentFile(file);
     }
+
     if (exiting.load()) {
         LastPoint.insert(start_index);
     }
+
     unzClose(file);
-}
-
-void kiemsoatCPU() {
-
-    // Lay handle cua tien trinh hien tai
-    HANDLE process = GetCurrentProcess();
-
-    // Thiết lập CPU affinity cho tiến trình
-    if (!SetProcessAffinityMask(process, affinity_mask)) {
-        cout << "Loi khi thao tac tai nguyen cpu "<<endl;
-        cout << "Chay mac dinh voi hieu suat toi da" << endl;
-    }
-}
-
-void KiemTraDung() {
-    cout << "Nhan F de tam dung chuong trinh neu muon"<<endl;
-    string exit;
-    while (!check.load()) {
-        if (_kbhit()) {
-            char ch = _getch();  // lay ki tu an
-            if (ch == 'F' || ch == 'f') {
-                exiting.store(true);  // Đặt cờ dừng
-                cout << "Dang dung..." << endl;
-                break;
-            }
-        }
-    }
-
 }
 
 void start() {
