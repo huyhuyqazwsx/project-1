@@ -66,22 +66,39 @@ void input() {
     passwordlength = passwordtext.length();
     maxindex = pow(passwordlength, numpassword);
 
-    cout<< "Chon che do chay chuong trinh"<<endl;
-    cout<< "1. Hieu suat toi da (12 cpu)"<<endl;;
-    cout<< "2. Hieu suat trung binh (6 cpu)"<<endl;
-    cout<< "3. Hieu suat thap (2 cpu)"<<endl;
+    //Che do chay
+    unsigned int max_cores = thread::hardware_concurrency();
+    unsigned int half_cores = max_cores / 2;
+    unsigned int quarter_cores = max_cores / 4;
+
+    cout << "So luong loai CPU cua he thong: " << max_cores << endl;
+
+    cout << "Chon che do chay chuong trinh:" << endl;
+    cout << "1. Hieu suat toi da (" << max_cores << " CPU)" << endl;
+    cout << "2. Hieu suat trung binh (" << half_cores << " CPU)" << endl;
+    cout << "3. Hieu suat thap (" << quarter_cores << " CPU)" << endl;
+
     int mid;
-    cin>>mid;
+    cin >> mid;
+
+    // Chọn số lõi CPU dựa trên lựa chọn của người dùng
     if (mid == 1) {
-        affinity_mask = 0b111111111111;
+        affinity_mask = (1 << max_cores) - 1;  // Sử dụng tất cả các lõi
     }
     else if (mid == 2) {
-        affinity_mask = 0b101010101010;// mac dinh cpu 1 , 3 , 5 , 7 , 9 , 11
+        affinity_mask = (1 << half_cores) - 1;  // Sử dụng một nửa số lõi
     }
     else if (mid == 3) {
-        affinity_mask = 0b000000010100;// mac dinh 2, 4
+        affinity_mask = (1 << quarter_cores) - 1;  // Sử dụng một phần tư số lõi
+    }
+    else {
+        cout << "Chon sai che do, su dung che do hieu suat toi da!" << endl;
+        affinity_mask = (1 << max_cores) - 1;  // Nếu chọn sai, mặc định sử dụng tất cả các lõi
     }
 
+    cout << "Da chon che do CPU voi mask: " << affinity_mask << endl;
+
+    //Lay thong tin lastpoin
     ifstream inputFile("LastPoint.txt");
     if (inputFile.is_open()) {
         string mid ;
@@ -163,6 +180,7 @@ void TryPassWithBruteForce(string zipfile, long long start_index, int numthread,
     }
 
     zip_stat_t st;
+
     if (zip_stat_index(archive, 0, 0, &st) != 0) {
         cerr << "Khong the lay thong tin file trong ZIP." << std::endl;
         zip_close(archive);
@@ -186,7 +204,7 @@ void TryPassWithBruteForce(string zipfile, long long start_index, int numthread,
             }
 
             // So sánh CRC32 với giá trị CRC32 mong muốn
-            if (st.crc == crc) {  // `stat.crc` chứa CRC32 của file
+            if (st.crc == crc) {
                 check.store(true);
                 cout << "Mat khau tim duoc: " << password << endl;
                 zip_fclose(zf);
