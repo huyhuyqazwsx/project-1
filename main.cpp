@@ -9,6 +9,7 @@
 #include <windows.h>
 #include <csignal>
 #include <conio.h>
+#include <zip.h>
 
 using namespace std;
 
@@ -154,61 +155,54 @@ string indexTransfer(string &passwordtext, long long i) {
 
 //Thu mat khau bang bung no to hop
 void TryPassWithBruteForce(string zipfile, long long start_index, int numthread, long long maxindex, string passwordtext) {
-    unzFile file = unzOpen(zipfile.c_str());
-
-    //mo file zip
-    if (file == NULL) {
-        cout << "Khong mo duoc file zip" << endl;
-        return;
-    }
-    //mo file dau tien
-    if (unzGoToFirstFile(file) != UNZ_OK) {
-        cout << "File rong hoac loi file";
+    int err = 0;
+    zip_t* archive = zip_open(zipfile.c_str(), ZIP_RDONLY, &err);
+    if (!archive) {
+        cerr << "Khong mo duoc file ZIP, loi: " << err << std::endl;
         return;
     }
 
-    //lay thog tin crc32
-    unz_file_info file_info;
-    if (unzGetCurrentFileInfo(file, &file_info, NULL, 0, NULL, 0, NULL, 0)!=UNZ_OK) {
-        unzClose(file);
+    zip_stat_t st;
+    if (zip_stat_index(archive, 0, 0, &st) != 0) {
+        cerr << "Khong the lay thong tin file trong ZIP." << std::endl;
+        zip_close(archive);
         return;
     }
 
-    // Kiểm tra mật khẩu
-    while (!check.load() && (start_index < maxindex) && !exiting.load() ) {
-        //lay mat khau
+    while (!check.load() && (start_index < maxindex) && !exiting.load()) {
         string password = indexTransfer(passwordtext, start_index);
         start_index += numthread;
 
-        if (unzOpenCurrentFilePassword(file, password.c_str()) == UNZ_OK) {
+        zip_file_t* zf = zip_fopen_encrypted(archive, st.name, 0, password.c_str());
+        if (zf) {
             // Đọc dữ liệu và kiểm tra CRC
-            char buffer[4096]; //Doc moi lan 4 kb
-            int bytes_read = unzReadCurrentFile(file, buffer, sizeof(buffer));
-            long long crc = 0;
+            char buffer[4096]; // Đọc mỗi lần 4 KB
+            int bytes_read = zip_fread(zf, buffer, sizeof(buffer));
+            unsigned long crc = 0;
 
             while (bytes_read > 0) {
                 crc = crc32(crc, (unsigned char*)buffer, bytes_read);
-                bytes_read = unzReadCurrentFile(file, buffer, sizeof(buffer));
+                bytes_read = zip_fread(zf, buffer, sizeof(buffer));
             }
 
-            if (file_info.crc == crc) {
+            // So sánh CRC32 với giá trị CRC32 mong muốn
+            if (st.crc == crc) {  // `stat.crc` chứa CRC32 của file
                 check.store(true);
                 cout << "Mat khau tim duoc: " << password << endl;
-                unzCloseCurrentFile(file);
-                unzClose(file);
+                zip_fclose(zf);
+                zip_close(archive);
                 deleteFile("LastPoint.txt");
                 return;
             }
-            unzCloseCurrentFile(file);
+            zip_fclose(zf);
         }
-        unzCloseCurrentFile(file);
     }
 
     if (exiting.load()) {
         LastPoint.insert(start_index);
     }
 
-    unzClose(file);
+    zip_close(archive);
 }
 
 void start() {
