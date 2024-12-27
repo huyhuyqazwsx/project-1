@@ -223,6 +223,10 @@ void TryPassWithBruteForce(string zipfile, long long start_index, int numthread,
     zip_close(archive);
 }
 
+void TryPassWithDictionary() {
+
+}
+
 void start() {
     // Chạy chương trình với nhiều luồng
     auto start = chrono::high_resolution_clock::now();
