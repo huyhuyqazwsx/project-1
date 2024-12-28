@@ -82,20 +82,27 @@ void input() {
     cin >> mid;
 
     // Chọn số lõi CPU dựa trên lựa chọn của người dùng
-    if (mid == 1) {
-        affinity_mask = (1 << max_cores) - 1;  // Sử dụng tất cả các lõi
-    }
-    else if (mid == 2) {
-        affinity_mask = (1 << half_cores) - 1;  // Sử dụng một nửa số lõi
-    }
-    else if (mid == 3) {
-        affinity_mask = (1 << quarter_cores) - 1;  // Sử dụng một phần tư số lõi
-    }
-    else {
-        cout << "Chon sai che do, su dung che do hieu suat toi da!" << endl;
-        affinity_mask = (1 << max_cores) - 1;  // Nếu chọn sai, mặc định sử dụng tất cả các lõi
-    }
+    // if (mid == 1) {
+    //     affinity_mask = (1 << max_cores) - 1;  // Sử dụng tất cả các lõi
+    // }
+    // else if (mid == 2) {
+    //     affinity_mask = (1 << half_cores) - 1;  // Sử dụng một nửa số lõi
+    // }
+    // else if (mid == 3) {
+    //     affinity_mask = (1 << quarter_cores) - 1;  // Sử dụng một phần tư số lõi
+    // }
+    // else {
+    //     cout << "Chon sai che do, su dung che do hieu suat toi da!" << endl;
+    //     affinity_mask = (1 << max_cores) - 1;  // Nếu chọn sai, mặc định sử dụng tất cả các lõi
+    // }
 
+    //test p core e core
+
+    //affinity_mask= (1<<4)-1;
+    //affinity_mask= ((1<<12)-1) ^ ((1<<8)-1);
+    //affinity_mask= (((1<<12)-1) ^ ((1<<8)-1)) ^ (1<<4)-1 ^ ((1<<12)-1);
+    affinity_mask = 0b110010101010; //4p 2e
+    //affinity_mask = 0b000011111010;//6p
     cout << "Da chon che do CPU voi mask: " << affinity_mask << endl;
 
     //Lay thong tin lastpoin
@@ -153,7 +160,6 @@ void KiemTraDung() {
             }
         }
     }
-
 }
 
 //Chuyen doi index sang password
