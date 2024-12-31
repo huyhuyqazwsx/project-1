@@ -2,19 +2,46 @@
 #include <minizip/unzip.h>
 #include <zlib.h>
 #include <atomic>
+#include <chrono>
 #include <thread>
 #include <fstream>
 #include <filesystem>
+#include <windows.h>
+#include <csignal>
+#include <conio.h>
+#include <zip.h>
 
 using namespace std;
 
-atomic<bool> check(false);
+atomic<bool> check(false);// Co hieu mat khau
+atomic<bool> exiting(false); // Co hieu thoat
+
+vector<thread> threads;
+
+DWORD_PTR affinity_mask ; //Mac dinh su dung 12 cpu
+
+string passwordtext = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+int numpassword = 0; // do dai mat khau
+int numthread = 1; //so luong
+int passwordlength = 0; //do dai khong gian ky tu
+long long maxindex=0; // khong gian mat khau
+long long LastIndex=0; //Diem cuoi cung duoc doc
+bool checkTuDien= false;
+set<long long> LastPoint;
+queue<string> passQueue[20];
+
+string copyfile[100]; //Toi da 100 file zip copy
+string zipfile; // Đường dẫn
 
 // Hàm sao chép file zip
 void copyFile(const string& source, const string& destination) {
-    ifstream src(source, ios::binary);
-    ofstream dst(destination, ios::binary);
-    dst << src.rdbuf();
+    string command = "copy \"" + source + "\" \"" + destination + "\" /Y";
+    int result =system(command.c_str());
+
+    // Kiểm tra kết quả thực thi
+    if (result != 0) {
+        throw runtime_error("Failed to copy file: " + source + " to " + destination);
+    }
 }
 
 // Hàm xóa file tạm
@@ -24,122 +51,328 @@ void deleteFile(const string& filepath) {
     }
 }
 
-// Hàm thử mật khẩu từ từ điển
-void tryPasswordWithDictionary(const string& zipfile, const vector<string>& passwords, unz_file_info file_info) {
-    unzFile file = unzOpen(zipfile.c_str());
-    if (!file) {
-        cerr << "Failed to open file: " << zipfile << endl;
+//Nhap lieu
+void input() {
+    // Nhập du lieu vao
+    cout<<"Nhap duong dan file zip: "<<endl;
+    getline(cin, zipfile);
+
+    cout << "Nhap do dai toi da mat khau muon thu: " << endl;
+    cin>>numpassword;
+
+    cout << "Nhap so luong ban muon thuc hien chuong trinh (luong toi da la 12): " << endl;
+    cin>>numthread;
+
+    cout << "Ban co muon thu mat khau voi tu dien khong" << endl;
+    cout << "Y/N" <<endl;
+    string input;
+    cin>>input;
+    if(input=="Y") {
+        checkTuDien = true;
+    }
+
+    if (checkTuDien) {
+        ifstream directoryFile("bungnotohop.txt");
+        string line;
+        long long lineindex = 0;
+
+        while (directoryFile>>line) {
+            passQueue[lineindex % numthread].push(line);
+            lineindex++;
+        }
+    }
+
+    //Xu ly sau nhap lieu
+    passwordlength = passwordtext.length();
+    maxindex = pow(passwordlength, numpassword);
+
+    //Che do chay
+    unsigned int max_cores = thread::hardware_concurrency();
+    unsigned int half_cores = max_cores / 2;
+    unsigned int quarter_cores = max_cores / 4;
+
+    cout << "So luong loai CPU cua he thong: " << max_cores << endl;
+
+    cout << "Chon che do chay chuong trinh:" << endl;
+    cout << "1. Hieu suat toi da (" << max_cores << " CPU)" << endl;
+    cout << "2. Hieu suat trung binh (" << half_cores << " CPU)" << endl;
+    cout << "3. Hieu suat thap (" << quarter_cores << " CPU)" << endl;
+
+    int mid;
+    cin >> mid;
+
+    // Chọn số lõi CPU dựa trên lựa chọn của người dùng
+    // if (mid == 1) {
+    //     affinity_mask = (1 << max_cores) - 1;  // Sử dụng tất cả các lõi
+    // }
+    // else if (mid == 2) {
+    //     affinity_mask = (1 << half_cores) - 1;  // Sử dụng một nửa số lõi
+    // }
+    // else if (mid == 3) {
+    //     affinity_mask = (1 << quarter_cores) - 1;  // Sử dụng một phần tư số lõi
+    // }
+    // else {
+    //     cout << "Chon sai che do, su dung che do hieu suat toi da!" << endl;
+    //     affinity_mask = (1 << max_cores) - 1;  // Nếu chọn sai, mặc định sử dụng tất cả các lõi
+    // }
+
+    //test p core e core
+
+    //affinity_mask= (1<<4)-1;
+    //affinity_mask= ((1<<12)-1) ^ ((1<<8)-1);
+    //affinity_mask= (((1<<12)-1) ^ ((1<<8)-1)) ^ (1<<4)-1 ^ ((1<<12)-1);
+    //affinity_mask = 0b110010101010; //4p 2e
+    //affinity_mask = 0b000011111010;//6p
+    cout << "Da chon che do CPU voi mask: " << affinity_mask << endl;
+
+    //Lay thong tin lastpoin
+    ifstream inputFile("LastPoint.txt");
+    if (inputFile.is_open()) {
+        string mid ;
+        getline(inputFile, mid);
+        long long num= stoll(mid);
+        getline(inputFile, mid);
+        cout << "Ban co muon tiep tuc tu lan duyet truoc tai vi tri " << num << " voi gia tri la " << mid << endl;
+        cout << "Y/N"<<endl;
+        cin>>mid;
+        if(mid == "Y") {
+            LastIndex = num;
+            inputFile.close();
+        }
+        else if (mid == "N") {
+            cout<< "Chuong trinh se chay tu dau" <<endl;
+            inputFile.close();
+            deleteFile("LastPoint.txt");
+        }
+    }
+
+    //tao ban sao zip
+    for(int i = 0; i < numthread; i++) {
+        copyfile[i] = "copy_" + to_string(i) + ".zip"; // Tạo bản sao của file zip cho mỗi luồng
+        copyFile(zipfile, copyfile[i]); // Sao chép file zip
+    }
+
+    cout << "Bat dau chuong trinh:" << endl;
+}
+
+void kiemsoatCPU() {
+
+    // Lay handle cua tien trinh hien tai
+    HANDLE process = GetCurrentProcess();
+
+    // Thiết lập CPU affinity cho tiến trình
+    if (!SetProcessAffinityMask(process, affinity_mask)) {
+        cout << "Loi khi thao tac tai nguyen cpu "<<endl;
+        cout << "Chay mac dinh voi hieu suat toi da" << endl;
+    }
+}
+
+void KiemTraDung() {
+    cout << "Nhan F de tam dung chuong trinh neu muon"<<endl;
+    string exit;
+    while (!check.load()) {
+        if (_kbhit()) {
+            char ch = _getch();  // lay ki tu an
+            if (ch == 'F' || ch == 'f') {
+                exiting.store(true);  // Đặt cờ dừng
+                cout << "Dang dung..." << endl;
+                break;
+            }
+        }
+    }
+}
+
+//Chuyen doi index sang password
+string indexTransfer(string &passwordtext, long long i) {
+    long long size = passwordtext.size();
+    long long index = 0;
+    string mid = "";
+    while (i != 0) {
+        index = i % size;
+        mid += passwordtext[index];
+        i = i / size;
+    }
+    reverse(mid.begin(), mid.end());
+    return mid;
+}
+
+//Thu mat khau bang bung no to hop
+void TryPassWithBruteForce(string zipfile, long long start_index, int numthread, long long maxindex, string passwordtext) {
+    int err = 0;
+    zip_t* archive = zip_open(zipfile.c_str(), ZIP_RDONLY, &err);
+    if (!archive) {
+        cerr << "Khong mo duoc file ZIP, loi: " << err << std::endl;
         return;
     }
 
-    if (unzGoToFirstFile(file) != UNZ_OK) {
-        cerr << "ZIP file is empty or corrupted." << endl;
-        unzClose(file);
+    zip_stat_t st;
+
+    if (zip_stat_index(archive, 0, 0, &st) != 0) {
+        cerr << "Khong the lay thong tin file trong ZIP." << std::endl;
+        zip_close(archive);
         return;
     }
 
-    for (const string& password : passwords) {
-        if (check.load()) break; // Dừng nếu mật khẩu đúng đã được tìm thấy
+    while (!check.load() && (start_index < maxindex) && !exiting.load()) {
+        string password = indexTransfer(passwordtext, start_index);
+        start_index += numthread;
 
-        if (unzOpenCurrentFilePassword(file, password.c_str()) == UNZ_OK) {
+        zip_file_t* zf = zip_fopen_encrypted(archive, st.name, 0, password.c_str());
+        if (zf) {
             // Đọc dữ liệu và kiểm tra CRC
-            char buffer[1024];
-            uLong crc = crc32(0L, Z_NULL, 0);
-            int bytesRead;
-            while ((bytesRead = unzReadCurrentFile(file, buffer, sizeof(buffer))) > 0) {
-                crc = crc32(crc, reinterpret_cast<const Bytef*>(buffer), bytesRead);
+            char buffer[4096]; // Đọc mỗi lần 4 KB
+            int bytes_read = zip_fread(zf, buffer, sizeof(buffer));
+            unsigned long crc = 0;
+
+            while (bytes_read > 0) {
+                crc = crc32(crc, (unsigned char*)buffer, bytes_read);
+                bytes_read = zip_fread(zf, buffer, sizeof(buffer));
             }
 
-            if (crc == file_info.crc) {
+            // So sánh CRC32 với giá trị CRC32 mong muốn
+            if (st.crc == crc) {
                 check.store(true);
-                cout << "Password found: " << password << endl;
-                unzCloseCurrentFile(file);
-                unzClose(file);
+                cout << "Mat khau tim duoc: " << password << endl;
+                zip_fclose(zf);
+                zip_close(archive);
+                deleteFile("LastPoint.txt");
                 return;
             }
-            unzCloseCurrentFile(file);
+            zip_fclose(zf);
         }
     }
 
-    unzClose(file);
+    if (exiting.load()) {
+        LastPoint.insert(start_index);
+    }
+
+    zip_close(archive);
 }
 
-void workerThread(const string& zipfile, const string& dictionaryFile, int threadID, int numThreads) {
-    ifstream infile(dictionaryFile);
-    if (!infile.is_open()) {
-        cerr << "Failed to open dictionary file: " << dictionaryFile << endl;
+void TryPassWithDictionary(string zipfile, int idnumthread) {
+    string password;
+    int err = 0;
+    zip_t* archive = zip_open(zipfile.c_str(), ZIP_RDONLY, &err);
+    if (!archive) {
+        cerr << "Khong mo duoc file ZIP, loi: " << err << std::endl;
         return;
     }
 
-    vector<string> passwords;
-    string line;
-    int lineIndex = 0;
+    zip_stat_t st;
 
-    // Lấy thông tin file để kiểm tra CRC
-    unzFile file = unzOpen(zipfile.c_str());
-    unz_file_info file_info;
-    if (unzGoToFirstFile(file) != UNZ_OK || unzGetCurrentFileInfo(file, &file_info, NULL, 0, NULL, 0, NULL, 0) != UNZ_OK) {
-        cerr << "Failed to retrieve file info from ZIP file." << endl;
-        unzClose(file);
+    if (zip_stat_index(archive, 0, 0, &st) != 0) {
+        cerr << "Khong the lay thong tin file trong ZIP." << std::endl;
+        zip_close(archive);
         return;
     }
-    unzClose(file);
 
-    // Đọc từ file từ điển và chỉ xử lý các dòng thuộc về luồng hiện tại
-    while (infile>>line) {
-        if (lineIndex % numThreads == threadID) {
-            passwords.push_back(line);
+    while (!check.load() && passQueue[idnumthread].size() > 0) {
+        password=passQueue[idnumthread].front();
+        passQueue[idnumthread].pop();
+
+        zip_file_t* zf = zip_fopen_encrypted(archive, st.name, 0, password.c_str());
+        if (zf) {
+            // Đọc dữ liệu và kiểm tra CRC
+            char buffer[4096]; // Đọc mỗi lần 4 KB
+            int bytes_read = zip_fread(zf, buffer, sizeof(buffer));
+            unsigned long crc = 0;
+
+            while (bytes_read > 0) {
+                crc = crc32(crc, (unsigned char*)buffer, bytes_read);
+                bytes_read = zip_fread(zf, buffer, sizeof(buffer));
+            }
+
+            // So sánh CRC32 với giá trị CRC32 mong muốn
+            if (st.crc == crc) {
+                check.store(true);
+                cout << "Mat khau tim duoc: " << password << endl;
+                zip_fclose(zf);
+                zip_close(archive);
+                deleteFile("LastPoint.txt");
+                return;
+            }
+            zip_fclose(zf);
         }
-        lineIndex++;
     }
-    infile.close();
 
-    // Thử mật khẩu trong danh sách
-    tryPasswordWithDictionary(zipfile, passwords, file_info);
+    zip_close(archive);
 }
 
-int main() {
-    string zipfile, dictionaryFile;
-    int numThreads;
-
-    cout << "Enter ZIP file path: ";
-    cin >> zipfile;
-    cout << "Enter dictionary file path: ";
-    cin >> dictionaryFile;
-    cout << "Enter number of threads: ";
-    cin >> numThreads;
-
-    vector<string> copyFiles(numThreads);
-
-    // Tạo các bản sao của file ZIP
-    for (int i = 0; i < numThreads; ++i) {
-        copyFiles[i] = "copy_" + to_string(i) + ".zip";
-        copyFile(zipfile, copyFiles[i]);
-    }
-
+void start() {
+    // Chạy chương trình với nhiều luồng
     auto start = chrono::high_resolution_clock::now();
 
-    vector<thread> threads;
-    for (int i = 0; i < numThreads; i++) {
-        threads.emplace_back(workerThread, copyFiles[i], dictionaryFile, i, numThreads);
+    if (checkTuDien) {
+        cout << "Dang thu voi tu dien" <<endl;
+        auto startTudien = chrono::high_resolution_clock::now();
+
+        for (int i = 0; i < numthread; i++) {
+            threads.emplace_back(TryPassWithDictionary, copyfile[i], i);
+        }
+
+        for (auto &th : threads) {
+            th.join();
+        }
+
+        threads.clear();
+
+        auto endTudien = chrono::high_resolution_clock::now();
+
+        chrono::duration<double> diffTudien = endTudien - startTudien;
+        cout<<"Giai ma tu dien voi thoi gian " << diffTudien.count()<<endl;
+
     }
 
-    for (auto& th : threads) {
+
+    for (int i = 0; i < numthread; i++) {
+        long long mid = LastIndex + i;
+        threads.emplace_back(TryPassWithBruteForce, copyfile[i], mid, numthread, maxindex, passwordtext);
+    }
+
+    thread stopThread(KiemTraDung);
+    stopThread.join();
+
+    for (auto &th : threads) {
         th.join();
     }
 
-    // Xóa các bản sao của file ZIP
-    for (const auto& file : copyFiles) {
-        deleteFile(file);
+    for (int i = 0; i < numthread; i++) {
+        string copyfile = "copy_" + to_string(i) + ".zip";
+        deleteFile(copyfile);
     }
 
     auto end = chrono::high_resolution_clock::now();
-    chrono::duration<double> elapsed = end - start;
 
-    if (!check.load()) {
-        cout << "Password not found in dictionary." << endl;
+    chrono::duration<double> diff = end - start;
+
+    if (!check.load() && !exiting.load()) cout << "Khong tim thay mat khau" << endl;
+
+    if (exiting.load()) {
+        ofstream fout("LastPoint.txt");
+        long long Point =*LastPoint.begin();
+        string mid = indexTransfer(passwordtext ,Point);
+        fout << Point << endl;
+        fout << mid << endl;
+        fout.close();
+        cout << "Mat khau dung lai tai vi tri "<< mid << endl;
+        cout << "Da luu thong tin last point vao thu muc LastPoint.txt"<<endl;
     }
-    cout << "Elapsed time: " << elapsed.count() << " seconds" << endl;
+    LastPoint.clear();
+    threads.clear();
 
+    cout << "Thoi gian giai ma: " << diff.count() << " s" << endl;
+}
+
+int main() {
+    //Nhap du lieu
+    input();
+
+    //Dieu chinh tai nguyen cpu
+    kiemsoatCPU();
+
+    //Bat dau chuong trinh
+    start();
+
+    system("pause");
     return 0;
 }
