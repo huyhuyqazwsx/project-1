@@ -20,6 +20,8 @@ atomic<int> countthread(0);
 vector<thread> threads;
 
 DWORD_PTR affinity_mask ; //Mac dinh su dung 12 cpu
+int coreCPU= 0;
+int threadCPU = 0;
 
 string passwordtext = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 int numpassword = 0; // do dai mat khau
@@ -33,6 +35,29 @@ queue<string> passQueue[20];
 
 string copyfile[100]; //Toi da 100 file zip copy
 string zipfile; // Đường dẫn
+
+void getInfoCPU() {
+    FILE *fp;
+    char buffer[128];
+
+    // Chạy lệnh CMD và đọc kết quả
+    fp = _popen("wmic cpu get NumberOfCores, NumberOfLogicalProcessors", "r");
+    if (fp == NULL) {
+        perror("Loi khi mo CMD");
+        return ;
+    }
+
+    while (fgets(buffer, sizeof(buffer), fp) != NULL) {
+        if (strstr(buffer, "NumberOfCores") == NULL && strstr(buffer, "NumberOfLogicalProcessors") == NULL) {
+            sscanf(buffer, "%d %d", &coreCPU, &threadCPU);
+        }
+    }
+
+    _pclose(fp);
+
+
+}
+
 
 // Hàm sao chép file zip
 void copyFile(const string& source, const string& destination) {
@@ -378,6 +403,11 @@ void start() {
 }
 
 int main() {
+    getInfoCPU();
+    cout<<coreCPU<<endl;
+    cout<<threadCPU<<endl;
+
+
     //Nhap du lieu
     input();
 
