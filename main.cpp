@@ -18,7 +18,7 @@ atomic<int> indexPassword(0);
 
 vector<thread> threads;
 
-DWORD_PTR affinity_mask ; //Mac dinh su dung 12 cpu
+DWORD_PTR affinity_mask ; //Mac dinh su dung tat ca cpu
 unsigned int coreCPU= 0;
 unsigned int threadCPU = 0;
 unsigned int pcore=0;
@@ -35,10 +35,11 @@ int numthread = 1; //so luong
 int passwordlength = 0; //do dai khong gian ky tu
 long long maxindex=0; // khong gian mat khau
 bool checkTuDien= false;
-bool hyperThread = false;
+bool hyperThread = false;//Kiểm tra siêu phân luồng
 queue<string> passQueue[20];
 
 string zipfile; // Đường dẫn
+string directoryfile; //Đường dẫn file từ điển
 
 void getInfoCPU() {
     FILE *fp;
@@ -154,10 +155,29 @@ void input() {
     cout << "Nhap so luong ban muon thuc hien chuong trinh (luong toi da la 12): " << endl;
     cin>>numthread;
 
-    //Xu ly sau nhap lieu
-    passwordlength = passwordtext.length();
-    maxindex = pow(passwordlength, numpassword);
+    //check tu dien
+    cout << "Ban co muon thu mat khau voi tu dien khong" << endl;
+    cout << "Y/N" <<endl;
+    string input;
+    cin>>input;
+    if(input=="Y") {
+        checkTuDien = true;
+    }
 
+    if (checkTuDien) {
+        cout << "Nhap duong dan file tu dien" <<endl;
+        cin >> directoryfile;
+        ifstream inputfile(directoryfile);
+        string line;
+        long long lineindex = 0;
+
+        while (inputfile>>line) {
+            passQueue[lineindex % numthread].push(line);
+            lineindex++;
+        }
+    }
+
+    //nhap so luong loi su dung
     cout << "So luong loai CPU cua he thong: " << max_cores << endl;
 
     cout << "Chon che do chay chuong trinh:" << endl;
@@ -193,25 +213,9 @@ void input() {
     cout << "Da chon che do CPU voi mask: " << affinity_mask << endl;
 
 
-    //check tu dien
-    cout << "Ban co muon thu mat khau voi tu dien khong" << endl;
-    cout << "Y/N" <<endl;
-    string input;
-    cin>>input;
-    if(input=="Y") {
-        checkTuDien = true;
-    }
-
-    if (checkTuDien) {
-        ifstream directoryFile("bungnotohop.txt");
-        string line;
-        long long lineindex = 0;
-
-        while (directoryFile>>line) {
-            passQueue[lineindex % numthread].push(line);
-            lineindex++;
-        }
-    }
+    //Xu ly sau nhap lieu
+    passwordlength = passwordtext.length();
+    maxindex = pow(passwordlength, numpassword);
 
 
     //Lay thong tin lastpoin
@@ -393,12 +397,15 @@ void start() {
         auto endTudien = chrono::high_resolution_clock::now();
 
         chrono::duration<double> diffTudien = endTudien - startTudien;
-        cout<<"Giai ma tu dien voi thoi gian " << diffTudien.count()<<endl;
+
+        cout << "Giai ma tu dien voi thoi gian " << diffTudien.count() << "s" << endl;
 
     }
 
 
     if (!check.load()) { // neu tim dc mat khau
+        if(checkTuDien) cout << "Khong tim thay mat khau voi tu dien" << endl;
+
         auto start = chrono::high_resolution_clock::now();
         cout << "Dang thu voi bung no to hop " << endl;
         for (int i = 0; i < numthread; i++) {
