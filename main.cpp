@@ -162,11 +162,10 @@ void input() {
     cin>>input;
     if(input=="Y") {
         checkTuDien = true;
-    }
 
-    if (checkTuDien) {
         cout << "Nhap duong dan file tu dien" <<endl;
         cin >> directoryfile;
+
         ifstream inputfile(directoryfile);
         string line;
         long long lineindex = 0;
@@ -176,6 +175,7 @@ void input() {
             lineindex++;
         }
     }
+
 
     //nhap so luong loi su dung
     cout << "So luong loai CPU cua he thong: " << max_cores << endl;
