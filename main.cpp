@@ -247,6 +247,7 @@ void TryPassWithBruteForce(string zipfile, long long maxindex, string passwordte
         return;
     }
 
+
     long long start_index= indexPassword.load();
 
     while (!check.load() && (start_index < maxindex) && !exiting.load()) {
