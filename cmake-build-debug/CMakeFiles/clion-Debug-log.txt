@@ -1,21 +1,12 @@
 "C:\Program Files\JetBrains\CLion 2024.3\bin\cmake\win\x64\bin\cmake.exe" -DCMAKE_BUILD_TYPE=Debug -DCMAKE_TOOLCHAIN_FILE=C:\Users\HUY\.vcpkg-clion\vcpkg\scripts\buildsystems\vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-mingw-dynamic -G "MinGW Makefiles" -S C:\Users\HUY\CLionProjects\testlibzip -B C:\Users\HUY\CLionProjects\testlibzip\cmake-build-debug
--- The C compiler identification is GNU 12.1.0
--- The CXX compiler identification is GNU 12.1.0
--- Detecting C compiler ABI info
--- Detecting C compiler ABI info - done
--- Check for working C compiler: C:/mingw64/bin/gcc.exe - skipped
--- Detecting C compile features
--- Detecting C compile features - done
--- Detecting CXX compiler ABI info
--- Detecting CXX compiler ABI info - done
--- Check for working CXX compiler: C:/mingw64/bin/c++.exe - skipped
--- Detecting CXX compile features
--- Detecting CXX compile features - done
 -- Found ZLIB: optimized;C:/Users/HUY/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libzlib.dll.a;debug;C:/Users/HUY/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/debug/lib/libzlibd.dll.a (found version "1.3.1")
 -- Found ZLIB: optimized;C:/Users/HUY/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libzlib.dll.a;debug;C:/Users/HUY/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/debug/lib/libzlibd.dll.a (found suitable version "1.3.1", minimum required is "1.1.2")
--- Found BZip2: optimized;C:/Users/HUY/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libbz2.dll.a;debug;C:/Users/HUY/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/debug/lib/libbz2d.dll.a (found version "1.0.8")
--- Looking for BZ2_bzCompressInit
--- Looking for BZ2_bzCompressInit - found
--- Configuring done (2.3s)
--- Generating done (0.0s)
+-- Configuring done (2.6s)
+-- Generating done (0.1s)
+CMake Warning:
+  Manually-specified variables were not used by the project:
+
+    CMAKE_TOOLCHAIN_FILE
+
+
 -- Build files have been written to: C:/Users/HUY/CLionProjects/testlibzip/cmake-build-debug
