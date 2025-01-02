@@ -7,7 +7,6 @@
 #include <filesystem>
 #include <windows.h>
 #include <conio.h>
-#include <csignal>
 #include <zip.h>
 
 using namespace std;
@@ -84,7 +83,7 @@ void kiemsoatCPU(unsigned int mid) {
 
     //cout<< pcore <<" " <<ecore<<endl;
 
-    if(!hyperThread){
+    if(!hyperThread){ // neu khong ho tro sieu phan luong
         affinity_mask =0;
         for(unsigned int i = threadCPU; i > threadCPU - mid ; i--){
             affinity_mask += 1<<(i-1);
@@ -298,7 +297,7 @@ void TryPassWithBruteForce(string zipfile, long long maxindex, string passwordte
         if (zf) {
             // Đọc dữ liệu và kiểm tra CRC
             char buffer[4096]; // Đọc mỗi lần 4 KB
-            int bytes_read = zip_fread(zf, buffer, sizeof(buffer));
+            long long bytes_read = zip_fread(zf, buffer, sizeof(buffer));
             unsigned long crc = 0;
 
             while (bytes_read > 0) {
@@ -351,7 +350,7 @@ void TryPassWithDictionary(string zipfile, int idnumthread) {
         if (zf) {
             // Đọc dữ liệu và kiểm tra CRC
             char buffer[4096]; // Đọc mỗi lần 4 KB
-            int bytes_read = zip_fread(zf, buffer, sizeof(buffer));
+            long long bytes_read = zip_fread(zf, buffer, sizeof(buffer));
             unsigned long crc = 0;
 
             while (bytes_read > 0) {
