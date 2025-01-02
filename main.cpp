@@ -39,7 +39,6 @@ bool checkTuDien= false;
 bool hyperThread = false;
 queue<string> passQueue[20];
 
-string copyfile[100]; //Toi da 100 file zip copy
 string zipfile; // Đường dẫn
 
 void getInfoCPU() {
