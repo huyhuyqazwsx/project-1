@@ -133,17 +133,6 @@ void kiemsoatCPU(unsigned int mid) {
     }
 }
 
-// Hàm sao chép file zip
-void copyFile(const string& source, const string& destination) {
-    string command = "copy \"" + source + "\" \"" + destination + "\" /Y";
-    int result =system(command.c_str());
-
-    // Kiểm tra kết quả thực thi
-    if (result != 0) {
-        throw runtime_error("Failed to copy file: " + source + " to " + destination);
-    }
-}
-
 // Hàm xóa file tạm
 void deleteFile(const string& filepath) {
     if (filesystem::exists(filepath)) {
@@ -248,12 +237,6 @@ void input() {
                 deleteFile("LastPoint.txt");
             }
         }
-    }
-
-    //tao ban sao zip
-    for(int i = 0; i < numthread; i++) {
-        copyfile[i] = "copy_" + to_string(i) + ".zip"; // Tạo bản sao của file zip cho mỗi luồng
-        copyFile(zipfile, copyfile[i]); // Sao chép file zip
     }
 
     cout << "Bat dau chuong trinh:" << endl;
@@ -400,7 +383,7 @@ void start() {
         auto startTudien = chrono::high_resolution_clock::now();
 
         for (int i = 0; i < numthread; i++) {
-            threads.emplace_back(TryPassWithDictionary, copyfile[i], i);
+            threads.emplace_back(TryPassWithDictionary, zipfile, i);
         }
 
         for (auto &th : threads) {
@@ -421,7 +404,7 @@ void start() {
         auto start = chrono::high_resolution_clock::now();
         cout << "Dang thu voi bung no to hop " << endl;
         for (int i = 0; i < numthread; i++) {
-            threads.emplace_back(TryPassWithBruteForce, copyfile[i], maxindex, passwordtext);
+            threads.emplace_back(TryPassWithBruteForce, zipfile, maxindex, passwordtext);
         }
 
         thread stopThread(KiemTraDung);
@@ -431,10 +414,6 @@ void start() {
             th.join();
         }
 
-        for (int i = 0; i < numthread; i++) {
-            string copyfile = "copy_" + to_string(i) + ".zip";
-            deleteFile(copyfile);
-        }
 
         auto end = chrono::high_resolution_clock::now();
 
@@ -463,11 +442,8 @@ void start() {
 }
 
 int main(){
-
     //Nhap du lieu
     input();
-
-    //Dieu chinh tai nguyen cpu
 
     //Bat dau chuong trinh
     start();
