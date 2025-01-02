@@ -20,8 +20,15 @@ atomic<int> indexPassword(0);
 vector<thread> threads;
 
 DWORD_PTR affinity_mask ; //Mac dinh su dung 12 cpu
-int coreCPU= 0;
-int threadCPU = 0;
+unsigned int coreCPU= 0;
+unsigned int threadCPU = 0;
+unsigned int pcore=0;
+unsigned int ecore=0;
+
+//Che do chay
+unsigned int max_cores = thread::hardware_concurrency();
+unsigned int half_cores = max_cores / 2;
+unsigned int quarter_cores = max_cores / 4;
 
 string passwordtext = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 int numpassword = 0; // do dai mat khau
@@ -29,6 +36,7 @@ int numthread = 1; //so luong
 int passwordlength = 0; //do dai khong gian ky tu
 long long maxindex=0; // khong gian mat khau
 bool checkTuDien= false;
+bool hyperThread = false;
 queue<string> passQueue[20];
 
 string copyfile[100]; //Toi da 100 file zip copy
@@ -48,12 +56,81 @@ void getInfoCPU() {
     while (fgets(buffer, sizeof(buffer), fp) != nullptr) {
         if (strstr(buffer, "NumberOfCores") == nullptr && strstr(buffer, "NumberOfLogicalProcessors") == nullptr) {
             sscanf(buffer, "%d %d", &coreCPU, &threadCPU);
+            break;
         }
 
     }
-
     _pclose(fp);
+}
 
+void kiemsoatCPU(unsigned int mid) {
+    getInfoCPU();
+
+    //cout << coreCPU << " " << threadCPU << endl;
+    //mid=11;
+    if(coreCPU*2 == threadCPU){
+        pcore = coreCPU;
+        hyperThread = true;
+    }
+    else if(coreCPU == threadCPU){
+        pcore = coreCPU;
+        ecore = 0;
+        hyperThread= false;
+    }
+    else{
+        ecore = threadCPU - coreCPU;
+        pcore = coreCPU - ecore;
+        hyperThread = true;
+    }
+
+    //cout<< pcore <<" " <<ecore<<endl;
+
+    if(!hyperThread){
+        affinity_mask =0;
+        for(unsigned int i = threadCPU; i > threadCPU - mid ; i--){
+            affinity_mask += 1<<(i-1);
+        }
+    }
+    else{
+        affinity_mask =0;
+        if(mid <= pcore){
+            for(unsigned int i = pcore; i > pcore - mid ; i-- ){
+                affinity_mask += 1<<(i*2 - 1);
+            }
+        }
+
+        else if(mid > pcore && mid <= (pcore + ecore)){
+            for(unsigned int i = pcore; i > 0 ; i-- ){
+                affinity_mask += 1<<(i*2 - 1);
+            }
+            for(unsigned int i= threadCPU; i > threadCPU - mid + pcore ; i--){
+                affinity_mask += 1 << (i-1);
+            }
+        }
+
+        else if((mid > pcore + ecore) && mid <= threadCPU){
+            for(unsigned int i = pcore; i > 0 ; i-- ){
+                affinity_mask += 1 << (i*2 - 1);
+            }
+            for(unsigned int i= threadCPU; i > threadCPU - ecore ; i--){
+                affinity_mask += 1 << (i-1);
+            }
+
+            for(unsigned int i = pcore; i > 2 * pcore + ecore - mid; i-- ){
+                affinity_mask += 1 << (i*2 - 2);
+            }
+
+        }
+    }
+
+    // Lay handle cua tien trinh hien tai
+    HANDLE process = GetCurrentProcess();
+
+    // Thiết lập CPU affinity cho tiến trình
+    if (!SetProcessAffinityMask(process, affinity_mask)) {
+        cout << "Loi khi thao tac tai nguyen cpu "<<endl;
+        cout << "Chay mac dinh voi hieu suat toi da" << endl;
+    }
 }
 
 // Hàm sao chép file zip
@@ -94,11 +171,6 @@ void input() {
     passwordlength = passwordtext.length();
     maxindex = pow(passwordlength, numpassword);
 
-    //Che do chay
-    unsigned int max_cores = thread::hardware_concurrency();
-    unsigned int half_cores = max_cores / 2;
-    unsigned int quarter_cores = max_cores / 4;
-
     cout << "So luong loai CPU cua he thong: " << max_cores << endl;
 
     cout << "Chon che do chay chuong trinh:" << endl;
@@ -111,17 +183,17 @@ void input() {
 
     // Chọn số lõi CPU dựa trên lựa chọn của người dùng
     if (mid == 1) {
-        affinity_mask = (1 << max_cores) - 1;  // Sử dụng tất cả các lõi
+        kiemsoatCPU(max_cores); // Sử dụng tất cả các lõi
     }
     else if (mid == 2) {
-        affinity_mask = (1 << half_cores) - 1;  // Sử dụng một nửa số lõi
+        kiemsoatCPU(half_cores);// Sử dụng một nửa số lõi
     }
     else if (mid == 3) {
-        affinity_mask = (1 << quarter_cores) - 1;  // Sử dụng một phần tư số lõi
+        kiemsoatCPU(quarter_cores);  // Sử dụng một phần tư số lõi
     }
     else {
         cout << "Chon sai che do, su dung che do hieu suat toi da!" << endl;
-        affinity_mask = (1 << max_cores) - 1;  // Nếu chọn sai, mặc định sử dụng tất cả các lõi
+        kiemsoatCPU(max_cores);  // Nếu chọn sai, mặc định sử dụng tất cả các lõi
     }
 
     //test p core e core
@@ -185,18 +257,6 @@ void input() {
     }
 
     cout << "Bat dau chuong trinh:" << endl;
-}
-
-void kiemsoatCPU() {
-
-    // Lay handle cua tien trinh hien tai
-    HANDLE process = GetCurrentProcess();
-
-    // Thiết lập CPU affinity cho tiến trình
-    if (!SetProcessAffinityMask(process, affinity_mask)) {
-        cout << "Loi khi thao tac tai nguyen cpu "<<endl;
-        cout << "Chay mac dinh voi hieu suat toi da" << endl;
-    }
 }
 
 void KiemTraDung() {
@@ -402,17 +462,12 @@ void start() {
 
 }
 
-int main() {
-     getInfoCPU();
-     cout<<coreCPU<<endl;
-     cout<<threadCPU<<endl;
-
+int main(){
 
     //Nhap du lieu
     input();
 
     //Dieu chinh tai nguyen cpu
-    kiemsoatCPU();
 
     //Bat dau chuong trinh
     start();
