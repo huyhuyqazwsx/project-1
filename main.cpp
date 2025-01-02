@@ -16,6 +16,7 @@ using namespace std;
 atomic<bool> check(false);// Co hieu mat khau
 atomic<bool> exiting(false); // Co hieu thoat
 atomic<int> countthread(0);
+atomic<int> indexPassword(0);
 
 vector<thread> threads;
 
@@ -30,7 +31,6 @@ int passwordlength = 0; //do dai khong gian ky tu
 long long maxindex=0; // khong gian mat khau
 long long LastIndex=0; //Diem cuoi cung duoc doc
 bool checkTuDien= false;
-set<long long> LastPoint;
 queue<string> passQueue[20];
 
 string copyfile[100]; //Toi da 100 file zip copy
@@ -56,8 +56,8 @@ void getInfoCPU() {
     _pclose(fp);
 
 
-}
 
+}
 
 // Hàm sao chép file zip
 void copyFile(const string& source, const string& destination) {
@@ -169,6 +169,7 @@ void input() {
         cout << "Y/N"<<endl;
         cin>>mid;
         if(mid == "Y") {
+            indexPassword.store(num);
             LastIndex = num;
             inputFile.close();
         }
@@ -230,7 +231,7 @@ string indexTransfer(string &passwordtext, long long i) {
 }
 
 //Thu mat khau bang bung no to hop
-void TryPassWithBruteForce(string zipfile, long long start_index, int numthread, long long maxindex, string passwordtext) {
+void TryPassWithBruteForce(string zipfile, long long maxindex, string passwordtext) {
     int err = 0;
     zip_t* archive = zip_open(zipfile.c_str(), ZIP_RDONLY, &err);
     if (!archive) {
@@ -246,9 +247,11 @@ void TryPassWithBruteForce(string zipfile, long long start_index, int numthread,
         return;
     }
 
+    long long start_index= indexPassword.load();
+
     while (!check.load() && (start_index < maxindex) && !exiting.load()) {
+        start_index = indexPassword.fetch_add(1);
         string password = indexTransfer(passwordtext, start_index);
-        start_index += numthread;
 
         zip_file_t* zf = zip_fopen_encrypted(archive, st.name, 0, password.c_str());
         if (zf) {
@@ -275,10 +278,7 @@ void TryPassWithBruteForce(string zipfile, long long start_index, int numthread,
         }
     }
 
-    if (exiting.load()) {
-        LastPoint.insert(start_index);
-    }
-    else if (start_index >= maxindex) {
+    if (start_index >= maxindex) {
         countthread.fetch_add(1);
     }
 
@@ -362,8 +362,7 @@ void start() {
         auto start = chrono::high_resolution_clock::now();
         cout << "Dang thu voi bung no to hop " << endl;
         for (int i = 0; i < numthread; i++) {
-            long long mid = LastIndex + i;
-            threads.emplace_back(TryPassWithBruteForce, copyfile[i], mid, numthread, maxindex, passwordtext);
+            threads.emplace_back(TryPassWithBruteForce, copyfile[i], maxindex, passwordtext);
         }
 
         thread stopThread(KiemTraDung);
@@ -389,23 +388,25 @@ void start() {
 
     if (exiting.load()) {
         ofstream fout("LastPoint.txt");
-        long long Point =*LastPoint.begin();
+        long long Point =indexPassword.load();
         string mid = indexTransfer(passwordtext ,Point);
+
         fout << Point << endl;
         fout << mid << endl;
         fout.close();
-        cout << "Mat khau dung lai tai vi tri "<< mid << endl;
+        cout << "Mat khau dung lai tai vi tri "<< Point << endl;
+        cout << "Co ki tu la " << mid <<endl;
         cout << "Da luu thong tin last point vao thu muc LastPoint.txt"<<endl;
     }
-    LastPoint.clear();
+
     threads.clear();
 
 }
 
 int main() {
-    getInfoCPU();
-    cout<<coreCPU<<endl;
-    cout<<threadCPU<<endl;
+    // getInfoCPU();
+    // cout<<coreCPU<<endl;
+    // cout<<threadCPU<<endl;
 
 
     //Nhap du lieu
