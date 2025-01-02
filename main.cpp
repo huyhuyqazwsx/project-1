@@ -1,4 +1,5 @@
 #include <bits/stdc++.h>
+#include <minizip/unzip.h>
 #include <zlib.h>
 #include <atomic>
 #include <chrono>
@@ -6,8 +7,8 @@
 #include <fstream>
 #include <filesystem>
 #include <windows.h>
-#include <conio.h>
 #include <csignal>
+#include <conio.h>
 #include <zip.h>
 
 using namespace std;
@@ -28,6 +29,7 @@ int numpassword = 0; // do dai mat khau
 int numthread = 1; //so luong
 int passwordlength = 0; //do dai khong gian ky tu
 long long maxindex=0; // khong gian mat khau
+long long LastIndex=0; //Diem cuoi cung duoc doc
 bool checkTuDien= false;
 queue<string> passQueue[20];
 
@@ -40,19 +42,20 @@ void getInfoCPU() {
 
     // Chạy lệnh CMD và đọc kết quả
     fp = _popen("wmic cpu get NumberOfCores, NumberOfLogicalProcessors", "r");
-    if (fp == nullptr) {
+    if (fp == NULL) {
         perror("Loi khi mo CMD");
         return ;
     }
 
-    while (fgets(buffer, sizeof(buffer), fp) != nullptr) {
-        if (strstr(buffer, "NumberOfCores") == nullptr && strstr(buffer, "NumberOfLogicalProcessors") == nullptr) {
+    while (fgets(buffer, sizeof(buffer), fp) != NULL) {
+        if (strstr(buffer, "NumberOfCores") == NULL && strstr(buffer, "NumberOfLogicalProcessors") == NULL) {
             sscanf(buffer, "%d %d", &coreCPU, &threadCPU);
         }
-
     }
 
     _pclose(fp);
+
+
 
 }
 
@@ -160,21 +163,20 @@ void input() {
     if (inputFile.is_open()) {
         string mid ;
         getline(inputFile, mid);
-        if(mid == zipfile) {
-            getline(inputFile, mid);
-            long long num = stoll(mid);
-            getline(inputFile, mid);
-            cout << "Ban co muon tiep tuc tu lan duyet truoc tai vi tri " << num << " voi gia tri la " << mid << endl;
-            cout << "Y/N" << endl;
-            cin >> mid;
-            if (mid == "Y") {
-                indexPassword.store(num);
-                inputFile.close();
-            } else if (mid == "N") {
-                cout << "Chuong trinh se chay tu dau" << endl;
-                inputFile.close();
-                deleteFile("LastPoint.txt");
-            }
+        long long num= stoll(mid);
+        getline(inputFile, mid);
+        cout << "Ban co muon tiep tuc tu lan duyet truoc tai vi tri " << num << " voi gia tri la " << mid << endl;
+        cout << "Y/N"<<endl;
+        cin>>mid;
+        if(mid == "Y") {
+            indexPassword.store(num);
+            LastIndex = num;
+            inputFile.close();
+        }
+        else if (mid == "N") {
+            cout<< "Chuong trinh se chay tu dau" <<endl;
+            inputFile.close();
+            deleteFile("LastPoint.txt");
         }
     }
 
@@ -244,7 +246,6 @@ void TryPassWithBruteForce(string zipfile, long long maxindex, string passwordte
         zip_close(archive);
         return;
     }
-
 
     long long start_index= indexPassword.load();
 
@@ -389,7 +390,7 @@ void start() {
         ofstream fout("LastPoint.txt");
         long long Point =indexPassword.load();
         string mid = indexTransfer(passwordtext ,Point);
-        fout << zipfile << endl;
+
         fout << Point << endl;
         fout << mid << endl;
         fout.close();
@@ -403,9 +404,9 @@ void start() {
 }
 
 int main() {
-     getInfoCPU();
-     cout<<coreCPU<<endl;
-     cout<<threadCPU<<endl;
+    // getInfoCPU();
+    // cout<<coreCPU<<endl;
+    // cout<<threadCPU<<endl;
 
 
     //Nhap du lieu
