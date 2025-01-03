@@ -322,7 +322,6 @@ void TryPassWithBruteForce(string zipfile, long long maxindex, string passwordte
             }
             zip_fclose(zf);
         }
-        zip_fclose(zf);
     }
 
     if (start_index >= maxindex) {
@@ -375,7 +374,6 @@ void TryPassWithDictionary(string zipfile, int idnumthread) {
             }
             zip_fclose(zf);
         }
-        zip_fclose(zf);
     }
 
     zip_close(archive);
