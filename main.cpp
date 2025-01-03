@@ -14,7 +14,7 @@ using namespace std;
 atomic<bool> check(false);// Co hieu mat khau
 atomic<bool> exiting(false); // Co hieu thoat
 atomic<int> countthread(0);
-atomic<int> indexPassword(0);
+atomic<long long> indexPassword(0);
 
 vector<thread> threads;
 
@@ -30,10 +30,10 @@ unsigned int half_cores = max_cores / 2;
 unsigned int quarter_cores = max_cores / 4;
 
 string passwordtext = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-int numpassword = 0; // do dai mat khau
-int numthread = 1; //so luong
-int passwordlength = 0; //do dai khong gian ky tu
-long long maxindex=0; // khong gian mat khau
+unsigned int numpassword = 0; // do dai mat khau
+unsigned int numthread = 1; //so luong
+unsigned long long passwordlength = 0; //do dai khong gian ky tu
+unsigned long long maxindex=0; // khong gian mat khau
 
 bool checkTuDien= false;
 bool hyperThread = false;//Kiểm tra siêu phân luồng
@@ -177,7 +177,7 @@ void input() {
 
         ifstream inputfile(directoryfile);
         string line;
-        long long lineindex = 0;
+        unsigned long long lineindex = 0;
 
         while (inputfile>>line) {
             passQueue[lineindex % numthread].push(line);
@@ -217,13 +217,13 @@ void input() {
 
     //Xu ly sau nhap lieu
     passwordlength = passwordtext.length();
-    maxindex = pow(passwordlength, numpassword);
+    maxindex = (long long)pow(passwordlength, numpassword);
 
 
     //Lay thong tin lastpoin
     ifstream inputFile("LastPoint.txt");
     if (inputFile.is_open()) {
-        string mid ;
+        string mid;
         getline(inputFile, mid);
         if(mid == zipfile) {
             getline(inputFile, mid);
@@ -262,9 +262,9 @@ void KiemTraDung() {
 }
 
 //Chuyen doi index sang password
-string indexTransfer(string &passwordtext, long long i) {
-    long long size = passwordtext.size();
-    long long index = 0;
+string indexTransfer(string &passwordtext, unsigned long long i) {
+    unsigned long long size = passwordlength;
+    unsigned long long index = 0;
     string mid = "";
     while (i != 0) {
         index = i % size;
@@ -348,7 +348,7 @@ void TryPassWithDictionary(string zipfile, int idnumthread) {
         return;
     }
 
-    while (!check.load() && passQueue[idnumthread].size() > 0) {
+    while (!check.load() && !passQueue[idnumthread].empty()) {
         password=passQueue[idnumthread].front();
         passQueue[idnumthread].pop();
 
@@ -374,6 +374,7 @@ void TryPassWithDictionary(string zipfile, int idnumthread) {
             }
             zip_fclose(zf);
         }
+        zip_fclose(zf);
     }
 
     zip_close(archive);
