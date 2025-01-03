@@ -14,7 +14,7 @@ using namespace std;
 atomic<bool> check(false);// Co hieu mat khau
 atomic<bool> exiting(false); // Co hieu thoat
 atomic<int> countthread(0);
-atomic<long long> indexPassword(0);
+atomic<unsigned long long> indexPassword(0);
 
 vector<thread> threads;
 
