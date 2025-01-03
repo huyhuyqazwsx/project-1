@@ -34,6 +34,7 @@ int numpassword = 0; // do dai mat khau
 int numthread = 1; //so luong
 int passwordlength = 0; //do dai khong gian ky tu
 long long maxindex=0; // khong gian mat khau
+
 bool checkTuDien= false;
 bool hyperThread = false;//Kiểm tra siêu phân luồng
 queue<string> passQueue[20];
@@ -122,6 +123,14 @@ void kiemsoatCPU(unsigned int mid) {
         }
     }
 
+    //test p core e core
+
+    //affinity_mask= (1<<4)-1;
+    //affinity_mask= ((1<<12)-1) ^ ((1<<8)-1);
+    //affinity_mask= (((1<<12)-1) ^ ((1<<8)-1)) ^ (1<<4)-1 ^ ((1<<12)-1);
+    //affinity_mask = 0b110010101010; //4p 2e
+    //affinity_mask = 0b000011111010;//6p
+
     // Lay handle cua tien trinh hien tai
     HANDLE process = GetCurrentProcess();
 
@@ -203,13 +212,6 @@ void input() {
         kiemsoatCPU(max_cores);  // Nếu chọn sai, mặc định sử dụng tất cả các lõi
     }
 
-    //test p core e core
-
-    //affinity_mask= (1<<4)-1;
-    //affinity_mask= ((1<<12)-1) ^ ((1<<8)-1);
-    //affinity_mask= (((1<<12)-1) ^ ((1<<8)-1)) ^ (1<<4)-1 ^ ((1<<12)-1);
-    //affinity_mask = 0b110010101010; //4p 2e
-    //affinity_mask = 0b000011111010;//6p
     cout << "Da chon che do CPU voi mask: " << affinity_mask << endl;
 
 
