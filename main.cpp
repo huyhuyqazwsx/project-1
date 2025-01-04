@@ -141,6 +141,29 @@ void kiemsoatCPU(unsigned int mid) {
     }
 }
 
+void runProgressBar(unsigned long long maxindex) {
+    unsigned long long index;
+    int percentage = 0;
+
+    ostringstream oss;
+
+    while (indexPassword.load() < maxindex && !check.load() && !exiting.load()) {
+        index = indexPassword.load();
+        percentage = (index*100) / maxindex;
+
+        oss.str(""); // Xóa chuỗi cũ
+        oss.clear();
+        oss << percentage << " % (" << index << "/" << maxindex << ")";
+        cout << "\r" << oss.str();
+        cout.flush();
+
+        this_thread::sleep_for(chrono::milliseconds(100));
+    }
+    if(check.load() || countthread.load()==numthread) {
+        cout << "100 %" <<endl;
+    }
+}
+
 // Hàm xóa file tạm
 void deleteFile(const string& filepath) {
     if (filesystem::exists(filepath)) {
@@ -161,8 +184,42 @@ void input() {
     }while (numpassword > 8 || numpassword < 1);
 
 
-    cout << "Nhap so luong ban muon thuc hien chuong trinh (luong toi da la 12): " << endl;
-    cin>>numthread;
+//    cout << "Nhap so luong ban muon thuc hien chuong trinh (luong toi da la 12): " << endl;
+//    cin>>numthread;
+
+    //nhap so luong loi su dung
+    cout << "So luong loai CPU cua he thong: " << max_cores << endl;
+
+    cout << "Chon che do chay chuong trinh:" << endl;
+    cout << "1. Hieu suat toi da (" << max_cores << " CPU)" << endl;
+    cout << "2. Hieu suat trung binh (" << half_cores << " CPU)" << endl;
+    cout << "3. Hieu suat thap (" << quarter_cores << " CPU)" << endl;
+
+    int mid;
+    cin >> mid;
+
+    // numthread= max_cores / mid;
+
+    // Chọn số lõi CPU dựa trên lựa chọn của người dùng
+    if (mid == 1) {
+        kiemsoatCPU(max_cores); // Sử dụng tất cả các lõi
+        numthread = max_cores - 1;
+    }
+    else if (mid == 2) {
+        kiemsoatCPU(half_cores);// Sử dụng một nửa số lõi
+        numthread = half_cores -1 ;
+    }
+    else if (mid == 3) {
+        kiemsoatCPU(quarter_cores);  // Sử dụng một phần tư số lõi
+        numthread = half_cores -1;
+    }
+    else {
+        cout << "Chon sai che do, su dung che do hieu suat toi da!" << endl;
+        kiemsoatCPU(max_cores);  // Nếu chọn sai, mặc định sử dụng tất cả các lõi
+        numthread = max_cores - 1;
+    }
+
+    cout << "Da chon che do CPU voi mask: " << affinity_mask << endl;
 
     //check tu dien
     cout << "Ban co muon thu mat khau voi tu dien khong" << endl;
@@ -185,34 +242,6 @@ void input() {
         }
     }
 
-
-    //nhap so luong loi su dung
-    cout << "So luong loai CPU cua he thong: " << max_cores << endl;
-
-    cout << "Chon che do chay chuong trinh:" << endl;
-    cout << "1. Hieu suat toi da (" << max_cores << " CPU)" << endl;
-    cout << "2. Hieu suat trung binh (" << half_cores << " CPU)" << endl;
-    cout << "3. Hieu suat thap (" << quarter_cores << " CPU)" << endl;
-
-    int mid;
-    cin >> mid;
-
-    // Chọn số lõi CPU dựa trên lựa chọn của người dùng
-    if (mid == 1) {
-        kiemsoatCPU(max_cores); // Sử dụng tất cả các lõi
-    }
-    else if (mid == 2) {
-        kiemsoatCPU(half_cores);// Sử dụng một nửa số lõi
-    }
-    else if (mid == 3) {
-        kiemsoatCPU(quarter_cores);  // Sử dụng một phần tư số lõi
-    }
-    else {
-        cout << "Chon sai che do, su dung che do hieu suat toi da!" << endl;
-        kiemsoatCPU(max_cores);  // Nếu chọn sai, mặc định sử dụng tất cả các lõi
-    }
-
-    cout << "Da chon che do CPU voi mask: " << affinity_mask << endl;
 
 
     //Xu ly sau nhap lieu
@@ -247,8 +276,6 @@ void input() {
 }
 
 void KiemTraDung() {
-    cout << "Nhan F de tam dung chuong trinh neu muon"<<endl;
-    string exit;
     while (!check.load() && countthread.load() != numthread) {
         if (_kbhit()) {
             char ch = _getch();  // lay ki tu an
@@ -314,7 +341,7 @@ void TryPassWithBruteForce(string zipfile, long long maxindex, string passwordte
             // So sánh CRC32 với giá trị CRC32 mong muốn
             if (st.crc == crc) {
                 check.store(true);
-                cout << "Mat khau tim duoc: " << password << endl;
+                cout << "\nMat khau tim duoc: " << password << endl;
                 zip_fclose(zf);
                 zip_close(archive);
                 deleteFile("LastPoint.txt");
@@ -367,7 +394,7 @@ void TryPassWithDictionary(string zipfile, int idnumthread) {
             // So sánh CRC32 với giá trị CRC32 mong muốn
             if (st.crc == crc) {
                 check.store(true);
-                cout << "Mat khau tim duoc: " << password << endl;
+                cout << "\nMat khau tim duoc: " << password << endl;
                 zip_fclose(zf);
                 zip_close(archive);
                 return;
@@ -414,7 +441,11 @@ void start() {
             threads.emplace_back(TryPassWithBruteForce, zipfile, maxindex, passwordtext);
         }
 
+        cout << "Nhan F de tam dung chuong trinh neu muon"<<endl;
+        thread hienphantram(runProgressBar,maxindex);
         thread stopThread(KiemTraDung);
+
+        hienphantram.join();
         stopThread.join();
 
         for (auto &th : threads) {
