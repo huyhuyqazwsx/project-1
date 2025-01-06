@@ -41,6 +41,7 @@ queue<string> passQueue[20];
 
 string zipfile; // Đường dẫn
 string directoryfile; //Đường dẫn file từ điển
+ifstream filePassword;
 
 void getInfoCPU() {
     FILE *fp;
@@ -232,11 +233,18 @@ void input() {
         cout << "Nhap duong dan file tu dien" <<endl;
         cin >> directoryfile;
 
-        ifstream inputfile(directoryfile);
+        filePassword.open(directoryfile);
+        if(!filePassword.is_open()){
+            cout << "\nLoi mo file tu dien" <<endl;
+            cout<<endl;
+
+            checkTuDien=false;
+        }
+
         string line;
         unsigned long long lineindex = 0;
 
-        while (inputfile>>line) {
+        while (filePassword>>line) {
             passQueue[lineindex % numthread].push(line);
             lineindex++;
         }
