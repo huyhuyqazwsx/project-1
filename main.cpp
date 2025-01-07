@@ -124,11 +124,26 @@ void kiemsoatCPU(unsigned int mid) {
         }
     }
 
+
+
     //test p core e core
 
+
+    //numthread = 6;
+
+    //4p dau
     //affinity_mask= (1<<4)-1;
-    //affinity_mask= ((1<<12)-1) ^ ((1<<8)-1);
+
+    //4p giua
     //affinity_mask= (((1<<12)-1) ^ ((1<<8)-1)) ^ (1<<4)-1 ^ ((1<<12)-1);
+
+    //4e
+    //affinity_mask= ((1<<12)-1) ^ ((1<<8)-1);
+
+    //4p xen ke
+    //affinity_mask = 0b000010101010;
+
+
     //affinity_mask = 0b110010101010; //4p 2e
     //affinity_mask = 0b000011111010;//6p
 
@@ -199,25 +214,25 @@ void input() {
     int mid;
     cin >> mid;
 
-    // numthread= max_cores / mid;
+    //kiemsoatCPU(numthread);
 
-    // Chọn số lõi CPU dựa trên lựa chọn của người dùng
+    //Chọn số lõi CPU dựa trên lựa chọn của người dùng
     if (mid == 1) {
         kiemsoatCPU(max_cores); // Sử dụng tất cả các lõi
-        numthread = max_cores - 1;
+        //numthread = max_cores - 1;
     }
     else if (mid == 2) {
         kiemsoatCPU(half_cores);// Sử dụng một nửa số lõi
-        numthread = half_cores -1 ;
+        //numthread = half_cores -1 ;
     }
     else if (mid == 3) {
         kiemsoatCPU(quarter_cores);  // Sử dụng một phần tư số lõi
-        numthread = half_cores -1;
+        //numthread = half_cores -1;
     }
     else {
         cout << "Chon sai che do, su dung che do hieu suat toi da!" << endl;
         kiemsoatCPU(max_cores);  // Nếu chọn sai, mặc định sử dụng tất cả các lõi
-        numthread = max_cores - 1;
+        //numthread = max_cores - 1;
     }
 
     cout << "Da chon che do CPU voi mask: " << affinity_mask << endl;
@@ -450,10 +465,10 @@ void start() {
         }
 
         cout << "Nhan F de tam dung chuong trinh neu muon"<<endl;
-        thread hienphantram(runProgressBar,maxindex);
+        //thread hienphantram(runProgressBar,maxindex);
         thread stopThread(KiemTraDung);
 
-        hienphantram.join();
+        //hienphantram.join();
         stopThread.join();
 
         for (auto &th : threads) {
