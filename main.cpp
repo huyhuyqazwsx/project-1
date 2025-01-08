@@ -79,8 +79,8 @@ void kiemsoatCPU(unsigned int mid) {
         hyperThread= false;
     }
     else{
-        ecore = threadCPU - coreCPU;
-        pcore = coreCPU - ecore;
+        pcore = threadCPU - coreCPU;
+        ecore = coreCPU - pcore;
         hyperThread = true;
     }
 
@@ -129,10 +129,11 @@ void kiemsoatCPU(unsigned int mid) {
     //test p core e core
 
 
-    //numthread = 6;
+    //numthread = 4;
 
     //4p dau
     //affinity_mask= (1<<4)-1;
+
 
     //4p giua
     //affinity_mask= (((1<<12)-1) ^ ((1<<8)-1)) ^ (1<<4)-1 ^ ((1<<12)-1);
@@ -142,6 +143,9 @@ void kiemsoatCPU(unsigned int mid) {
 
     //4p xen ke
     //affinity_mask = 0b000010101010;
+
+    //macdinh
+    //affinity_mask = 0b111111111111;
 
 
     //affinity_mask = 0b110010101010; //4p 2e
@@ -155,17 +159,17 @@ void kiemsoatCPU(unsigned int mid) {
         cout << "Loi khi thao tac tai nguyen cpu "<<endl;
         cout << "Chay mac dinh voi hieu suat toi da" << endl;
     }
+
 }
 
 void runProgressBar(unsigned long long maxindex) {
     unsigned long long index;
     int percentage = 0;
-
     ostringstream oss;
 
     while (indexPassword.load() < maxindex && !check.load() && !exiting.load()) {
         index = indexPassword.load();
-        percentage = (index*100) / maxindex;
+        percentage = (index * 100) / maxindex;
 
         oss.str(""); // Xóa chuỗi cũ
         oss.clear();
@@ -173,7 +177,7 @@ void runProgressBar(unsigned long long maxindex) {
         cout << "\r" << oss.str();
         cout.flush();
 
-        this_thread::sleep_for(chrono::milliseconds(100));
+        this_thread::sleep_for(chrono::milliseconds(500));
     }
     if(check.load() || countthread.load()==numthread) {
         cout << "100 %" <<endl;
@@ -214,25 +218,24 @@ void input() {
     int mid;
     cin >> mid;
 
-    //kiemsoatCPU(numthread);
 
     //Chọn số lõi CPU dựa trên lựa chọn của người dùng
     if (mid == 1) {
         kiemsoatCPU(max_cores); // Sử dụng tất cả các lõi
-        //numthread = max_cores - 1;
+        numthread = max_cores - 1;
     }
     else if (mid == 2) {
         kiemsoatCPU(half_cores);// Sử dụng một nửa số lõi
-        //numthread = half_cores -1 ;
+        numthread = half_cores -1 ;
     }
     else if (mid == 3) {
         kiemsoatCPU(quarter_cores);  // Sử dụng một phần tư số lõi
-        //numthread = half_cores -1;
+        numthread = half_cores -1;
     }
     else {
         cout << "Chon sai che do, su dung che do hieu suat toi da!" << endl;
         kiemsoatCPU(max_cores);  // Nếu chọn sai, mặc định sử dụng tất cả các lõi
-        //numthread = max_cores - 1;
+        numthread = max_cores - 1;
     }
 
     cout << "Da chon che do CPU voi mask: " << affinity_mask << endl;
@@ -256,13 +259,16 @@ void input() {
             checkTuDien=false;
         }
 
-        string line;
-        unsigned long long lineindex = 0;
+        else{
+            string line;
+            unsigned long long lineindex = 0;
 
-        while (filePassword>>line) {
-            passQueue[lineindex % numthread].push(line);
-            lineindex++;
+            while (filePassword>>line) {
+                passQueue[lineindex % numthread].push(line);
+                lineindex++;
+            }
         }
+
     }
 
 
@@ -465,10 +471,10 @@ void start() {
         }
 
         cout << "Nhan F de tam dung chuong trinh neu muon"<<endl;
-        //thread hienphantram(runProgressBar,maxindex);
+        thread hienphantram(runProgressBar,maxindex);
         thread stopThread(KiemTraDung);
 
-        //hienphantram.join();
+        hienphantram.join();
         stopThread.join();
 
         for (auto &th : threads) {
