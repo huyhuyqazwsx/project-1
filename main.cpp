@@ -245,7 +245,7 @@ void input() {
     }
     else if (mid == 3) {
         kiemsoatCPU(quarter_cores);  // Sử dụng một phần tư số lõi
-        numthread = half_cores;
+        numthread = quarter_cores;
     }
     else {
         cout << "Chon sai che do, su dung che do hieu suat toi da!" << endl;
@@ -365,7 +365,7 @@ void KiemTraDung() {
 }
 
 //Chuyen doi index sang password
-inline string indexTransfer(string &passwordText, unsigned long long i) {
+string indexTransfer(string &passwordText, unsigned long long i) {
     unsigned long long size = passwordlength;
     unsigned long long index = 0;
     string line = "";
