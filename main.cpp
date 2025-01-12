@@ -158,13 +158,14 @@ void kiemsoatCPU(unsigned int mid) {
     //affinity_mask = 0b000011111010;//6p
 
     // Lay handle cua tien trinh hien tai
-//    HANDLE process = GetCurrentProcess();
-//
-//    // Thiết lập CPU affinity cho tiến trình
-//    if (!SetProcessAffinityMask(process, affinity_mask)) {
-//        cout << "Loi khi thao tac tai nguyen cpu "<<endl;
-//        cout << "Chay mac dinh voi hieu suat toi da" << endl;
-//    }
+    HANDLE process = GetCurrentProcess();
+
+    SetPriorityClass(process, REALTIME_PRIORITY_CLASS);
+    // Thiết lập CPU affinity cho tiến trình
+    if (!SetProcessAffinityMask(process, affinity_mask)) {
+        cout << "Loi khi thao tac tai nguyen cpu "<<endl;
+        cout << "Chay mac dinh voi hieu suat toi da" << endl;
+    }
 
 }
 
@@ -226,11 +227,11 @@ void input() {
     //Chọn số lõi CPU dựa trên lựa chọn của người dùng
     if (mid == 1) {
         kiemsoatCPU(max_cores); // Sử dụng tất cả các lõi
-        numthread = max_cores;
+        numthread = max_cores - 2;
     }
     else if (mid == 2) {
         kiemsoatCPU(half_cores);// Sử dụng một nửa số lõi
-        numthread = half_cores ;
+        numthread = half_cores;
     }
     else if (mid == 3) {
         kiemsoatCPU(quarter_cores);  // Sử dụng một phần tư số lõi
@@ -239,7 +240,7 @@ void input() {
     else {
         cout << "Chon sai che do, su dung che do hieu suat toi da!" << endl;
         kiemsoatCPU(max_cores);  // Nếu chọn sai, mặc định sử dụng tất cả các lõi
-        numthread = max_cores ;
+        numthread = max_cores - 2;
     }
 
     cout << "Da chon che do CPU voi mask: " << affinity_mask << endl;
@@ -359,8 +360,8 @@ inline string indexTransfer(string &passwordtext, unsigned long long i) {
 //Thu mat khau bang bung no to hop
 void TryPassWithBruteForce(string zipfile, long long maxindex, string passwordtext) {
     //gan nhan cpu
-    HANDLE thread = GetCurrentThread();
-    SetThreadAffinityMask(thread, affinity_mask);
+//    HANDLE thread = GetCurrentThread();
+//    SetThreadAffinityMask(thread, affinity_mask);
 
     int err = 0;
     zip_t* archive = zip_open(zipfile.c_str(), ZIP_RDONLY, &err);
@@ -418,8 +419,8 @@ void TryPassWithBruteForce(string zipfile, long long maxindex, string passwordte
 
 void TryPassWithDictionary(string zipfile) {
     //gan nhan cpu
-    HANDLE thread = GetCurrentThread();
-    SetThreadAffinityMask(thread, affinity_mask);
+//    HANDLE thread = GetCurrentThread();
+//    SetThreadAffinityMask(thread, affinity_mask);
 
     string password;
     int err = 0;
