@@ -46,6 +46,7 @@ string passQueue[maxIndexQueue];
 
 string zipfile; // Đường dẫn
 string directoryfile; //Đường dẫn file từ điển
+string truePassword;
 ifstream filePassword;
 
 void getInfoCPU() {
@@ -157,30 +158,28 @@ void kiemsoatCPU(unsigned int mid) {
     //affinity_mask = 0b000011111010;//6p
 
     // Lay handle cua tien trinh hien tai
-    HANDLE process = GetCurrentProcess();
-
-    // Thiết lập CPU affinity cho tiến trình
-    if (!SetProcessAffinityMask(process, affinity_mask)) {
-        cout << "Loi khi thao tac tai nguyen cpu "<<endl;
-        cout << "Chay mac dinh voi hieu suat toi da" << endl;
-    }
+//    HANDLE process = GetCurrentProcess();
+//
+//    // Thiết lập CPU affinity cho tiến trình
+//    if (!SetProcessAffinityMask(process, affinity_mask)) {
+//        cout << "Loi khi thao tac tai nguyen cpu "<<endl;
+//        cout << "Chay mac dinh voi hieu suat toi da" << endl;
+//    }
 
 }
 
 void runProgressBar(unsigned long long maxindex) {
-    unsigned long long index;
-    int percentage = 0;
-    ostringstream oss;
+    unsigned long long index = indexPassword.load();
+    double percentage = 0;
+    string mid ="";
 
-    while (indexPassword.load() < maxindex && !check.load() && !exiting.load()) {
+    while ( index < maxindex && !check.load() && !exiting.load()) {
         index = indexPassword.load();
-        percentage = (index * 100) / maxindex;
+        percentage = (double)index / (double)maxindex;
+        percentage *= 100;
 
-        oss.str(""); // Xóa chuỗi cũ
-        oss.clear();
-        oss << percentage << " % (" << index << "/" << maxindex << ")";
-        cout << "\r" << oss.str();
-        cout.flush();
+        mid = to_string(percentage) + " %" + " (" + to_string(index) + "/" + to_string(maxindex) + ")";
+        cerr << "\r" << mid;
 
         this_thread::sleep_for(chrono::milliseconds(500));
     }
@@ -227,20 +226,20 @@ void input() {
     //Chọn số lõi CPU dựa trên lựa chọn của người dùng
     if (mid == 1) {
         kiemsoatCPU(max_cores); // Sử dụng tất cả các lõi
-        numthread = max_cores - 1;
+        numthread = max_cores;
     }
     else if (mid == 2) {
         kiemsoatCPU(half_cores);// Sử dụng một nửa số lõi
-        numthread = half_cores -1 ;
+        numthread = half_cores ;
     }
     else if (mid == 3) {
         kiemsoatCPU(quarter_cores);  // Sử dụng một phần tư số lõi
-        numthread = half_cores -1;
+        numthread = half_cores;
     }
     else {
         cout << "Chon sai che do, su dung che do hieu suat toi da!" << endl;
         kiemsoatCPU(max_cores);  // Nếu chọn sai, mặc định sử dụng tất cả các lõi
-        numthread = max_cores - 1;
+        numthread = max_cores ;
     }
 
     cout << "Da chon che do CPU voi mask: " << affinity_mask << endl;
@@ -344,7 +343,7 @@ void KiemTraDung() {
 }
 
 //Chuyen doi index sang password
-string indexTransfer(string &passwordtext, unsigned long long i) {
+inline string indexTransfer(string &passwordtext, unsigned long long i) {
     unsigned long long size = passwordlength;
     unsigned long long index = 0;
     string mid = "";
@@ -359,6 +358,10 @@ string indexTransfer(string &passwordtext, unsigned long long i) {
 
 //Thu mat khau bang bung no to hop
 void TryPassWithBruteForce(string zipfile, long long maxindex, string passwordtext) {
+    //gan nhan cpu
+    HANDLE thread = GetCurrentThread();
+    SetThreadAffinityMask(thread, affinity_mask);
+
     int err = 0;
     zip_t* archive = zip_open(zipfile.c_str(), ZIP_RDONLY, &err);
     if (!archive) {
@@ -396,7 +399,7 @@ void TryPassWithBruteForce(string zipfile, long long maxindex, string passwordte
             // So sánh CRC32 với giá trị CRC32 mong muốn
             if (st.crc == crc) {
                 check.store(true);
-                cout << "\nMat khau tim duoc: " << password << endl;
+                truePassword = password;
                 zip_fclose(zf);
                 zip_close(archive);
                 deleteFile("LastPoint.txt");
@@ -414,6 +417,10 @@ void TryPassWithBruteForce(string zipfile, long long maxindex, string passwordte
 }
 
 void TryPassWithDictionary(string zipfile) {
+    //gan nhan cpu
+    HANDLE thread = GetCurrentThread();
+    SetThreadAffinityMask(thread, affinity_mask);
+
     string password;
     int err = 0;
     zip_t* archive = zip_open(zipfile.c_str(), ZIP_RDONLY, &err);
@@ -464,7 +471,7 @@ void TryPassWithDictionary(string zipfile) {
             // So sánh CRC32 với giá trị CRC32 mong muốn
             if (st.crc == crc) {
                 check.store(true);
-                cout << "\nMat khau tim duoc: " << password << endl;
+                truePassword = password;
                 zip_fclose(zf);
                 zip_close(archive);
                 return;
@@ -512,6 +519,7 @@ void start() {
         }
 
         cout << "Nhan F de tam dung chuong trinh neu muon"<<endl;
+
         thread hienphantram(runProgressBar,maxindex);
         thread stopThread(KiemTraDung);
 
@@ -530,7 +538,10 @@ void start() {
         cout << "Thoi gian giai ma: " << diff.count() << " s" << endl;
     }
 
-    if (!check.load() && !exiting.load()) cout << "Khong tim thay mat khau" << endl;
+    if(check.load()){
+        cout << "Mat khau tim duoc la: " << truePassword << endl;
+    }
+    else if (!check.load() && !exiting.load()) cout << "Khong tim thay mat khau" << endl;
 
     if (exiting.load()) {
         ofstream fout("LastPoint.txt");
