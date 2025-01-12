@@ -172,7 +172,7 @@ void kiemsoatCPU(unsigned int mid) {
 void runProgressBar(unsigned long long maxindex) {
     unsigned long long index = indexPassword.load();
     double percentage = 0;
-    string mid ="";
+    string mid;
 
     while ( index < maxindex && !check.load() && !exiting.load()) {
         index = indexPassword.load();
@@ -259,7 +259,6 @@ void input() {
         filePassword.open(directoryfile);
         if(!filePassword.is_open()){
             cout << "\nLoi mo file tu dien" <<endl;
-            cout<<endl;
 
             checkTuDien=false;
         }
@@ -268,6 +267,7 @@ void input() {
             string line;
             for(int i = 0 ;i < maxIndexQueue ; i++ ){
                 if(filePassword.eof()) break;
+
                 getline(filePassword, line);
                 passQueue[i] = line;
             }
@@ -293,10 +293,12 @@ void input() {
             cout << "Ban co muon tiep tuc tu lan duyet truoc tai vi tri " << num << " voi gia tri la " << mid << endl;
             cout << "Y/N" << endl;
             cin >> mid;
+
             if (mid == "Y") {
                 indexPassword.store(num);
                 inputFile.close();
-            } else if (mid == "N") {
+            }
+            else{
                 cout << "Chuong trinh se chay tu dau" << endl;
                 inputFile.close();
                 deleteFile("LastPoint.txt");
