@@ -266,10 +266,13 @@ void input() {
         else{
             string line;
             for(int i = 0 ;i < maxIndexQueue ; i++ ){
-                if(filePassword.eof()) break;
-
-                getline(filePassword, line);
-                passQueue[i] = line;
+                if(getline(filePassword, line)){
+                    passQueue[i] = line;
+                }
+                else{
+                    checkEof.store(true);
+                    midMaxIndexQueue=i;
+                }
             }
         }
     }
