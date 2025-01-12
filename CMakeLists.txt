@@ -14,11 +14,5 @@ find_package(ZLIB REQUIRED)
 include_directories(${ZLIB_INCLUDE_DIRS})
 target_link_libraries(Project PRIVATE ZLIB::ZLIB)
 
-find_package(unofficial-minizip CONFIG REQUIRED)
-target_link_libraries(Project PRIVATE unofficial::minizip::minizip)
-
 find_package(libzip CONFIG REQUIRED)
 target_link_libraries(Project PRIVATE libzip::zip)
-
-find_package(7zip CONFIG REQUIRED)
-target_link_libraries(Project PRIVATE 7zip::7zip)

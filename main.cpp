@@ -171,22 +171,25 @@ void kiemsoatCPU(unsigned int mid) {
 
 void runProgressBar(unsigned long long maxindex) {
     unsigned long long index = indexPassword.load();
-    double percentage = 0;
+    float percentage = 0;
     string mid;
 
     while ( index < maxindex && !check.load() && !exiting.load()) {
-        index = indexPassword.load();
-        percentage = (double)index / (double)maxindex;
+        this_thread::sleep_for(chrono::milliseconds(200));
+
+        index = min( indexPassword.load(), maxindex );
+        percentage = (float)index / (float)maxindex;
         percentage *= 100;
 
-        mid = to_string(percentage) + " %" + " (" + to_string(index) + "/" + to_string(maxindex) + ")";
-        cerr << "\r" << mid;
-
-        this_thread::sleep_for(chrono::milliseconds(500));
+        mid = "\033[2K\r" + to_string(percentage) + " %" + " (" + to_string(index) + "/" + to_string(maxindex) + ")";
+        cerr << mid;
     }
     if(check.load() || countthread.load()==numthread) {
-        cout << "100 %" <<endl;
+        mid = "\033[2K\r100 % (" + to_string(maxindex) + "/" + to_string(maxindex) + ")";
+        cerr <<  mid;
     }
+
+    cout << endl;
 }
 
 // Hàm xóa file tạm
@@ -281,7 +284,10 @@ void input() {
 
     //Xu ly sau nhap lieu
     passwordlength = passwordtext.length();
-    maxindex = (long long)pow(passwordlength, numpassword);
+    for(int i = 1; i <= numpassword ; i++){
+        maxindex += (long long)pow(passwordlength, i);
+    }
+
 
 
     //Lay thong tin lastpoin
@@ -337,11 +343,14 @@ void updateQueue(){
 
 void KiemTraDung() {
     while (!check.load() && countthread.load() != numthread) {
+        this_thread::sleep_for(chrono::milliseconds(50));
+
         if (_kbhit()) {
             char ch = _getch();  // lay ki tu an
             if (ch == 'F' || ch == 'f') {
                 exiting.store(true);  // Đặt cờ dừng
-                cout << "Dang dung..." << endl;
+                this_thread::sleep_for(chrono::milliseconds(10));
+                cout << "\nDang dung..." << endl;
                 break;
             }
         }
