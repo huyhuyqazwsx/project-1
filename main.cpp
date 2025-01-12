@@ -42,7 +42,8 @@ unsigned int midMaxIndexQueue = maxIndexQueue;
 
 bool checkTuDien= false;
 bool hyperThread = false;//Kiểm tra siêu phân luồng
-string passQueue[maxIndexQueue];
+
+string passQueue[maxIndexQueue];//Hang doi mat khau cho tu dien
 
 string zipfile; // Đường dẫn
 string directoryfile; //Đường dẫn file từ điển
@@ -60,13 +61,14 @@ void getInfoCPU() {
         return ;
     }
 
-    while (fgets(buffer, sizeof(buffer), fp) != nullptr) {
-        if (strstr(buffer, "NumberOfCores") == nullptr && strstr(buffer, "NumberOfLogicalProcessors") == nullptr) {
-            sscanf(buffer, "%d %d", &coreCPU, &threadCPU);
-            break;
-        }
+    //bo qua dong dau
+    fgets(buffer, sizeof(buffer) , fp);
 
-    }
+    //lay thong tin
+    fgets(buffer, sizeof(buffer) , fp);
+    istringstream iss(buffer);
+    iss >> coreCPU >> threadCPU;
+
     _pclose(fp);
 }
 
@@ -169,28 +171,28 @@ void kiemsoatCPU(unsigned int mid) {
 
 }
 
-void runProgressBar(unsigned long long maxindex) {
+void runProgressBar(unsigned long long maxIndex) {
     unsigned long long index = indexPassword.load();
     float percentage = 0;
     string mid;
 
-    while ( index < maxindex && !check.load() && !exiting.load()) {
+    while ( index < maxIndex && !check.load() && !exiting.load()) {
         this_thread::sleep_for(chrono::milliseconds(200));
 
-        index = min( indexPassword.load(), maxindex );
-        percentage = (float)index / (float)maxindex;
+        index = min( indexPassword.load(), maxIndex );
+        percentage = (float)index / (float)maxIndex;
         percentage *= 100;
 
-        mid = "\033[2K\r" + to_string(percentage) + " %" + " (" + to_string(index) + "/" + to_string(maxindex) + ")";
+        mid = "\033[2K\r" + to_string(percentage) + " %" + " (" + to_string(index) + "/" + to_string(maxIndex) + ")";
         cerr << mid;
 
-        if(index == maxindex){
+        if(index == maxIndex){
             cout << "\nDang ket thuc..." << endl;
         }
     }
 
     if(check.load() || countthread.load()==numthread) {
-        mid = "\033[2K\r100 % (" + to_string(maxindex) + "/" + to_string(maxindex) + ")";
+        mid = "\033[2K\r100 % (" + to_string(maxIndex) + "/" + to_string(maxIndex) + ")";
         cerr <<  mid;
     }
 
@@ -298,17 +300,17 @@ void input() {
     //Lay thong tin lastpoin
     ifstream inputFile("LastPoint.txt");
     if (inputFile.is_open()) {
-        string mid;
-        getline(inputFile, mid);
-        if(mid == zipfile) {
-            getline(inputFile, mid);
-            long long num = stoll(mid);
-            getline(inputFile, mid);
+        string line;
+        getline(inputFile, line);
+        if(line == zipfile) {
+            getline(inputFile, line);
+            long long num = stoll(line);
+            getline(inputFile, line);
             cout << "Ban co muon tiep tuc tu lan duyet truoc tai vi tri " << num << " voi gia tri la " << mid << endl;
             cout << "Y/N" << endl;
-            cin >> mid;
+            cin >> line;
 
-            if (mid == "Y") {
+            if (line == "Y") {
                 indexPassword.store(num);
                 inputFile.close();
             }
@@ -351,7 +353,7 @@ void KiemTraDung() {
         this_thread::sleep_for(chrono::milliseconds(50));
 
         if (_kbhit()) {
-            char ch = _getch();  // lay ki tu an
+            unsigned char ch = _getch();  // lay ki tu an
             if (ch == 'F' || ch == 'f') {
                 exiting.store(true);  // Đặt cờ dừng
                 this_thread::sleep_for(chrono::milliseconds(10));
@@ -363,17 +365,17 @@ void KiemTraDung() {
 }
 
 //Chuyen doi index sang password
-inline string indexTransfer(string &passwordtext, unsigned long long i) {
+inline string indexTransfer(string &passwordText, unsigned long long i) {
     unsigned long long size = passwordlength;
     unsigned long long index = 0;
-    string mid = "";
+    string line = "";
     while (i != 0) {
         index = i % size;
-        mid += passwordtext[index];
+        line += passwordText[index];
         i = i / size;
     }
-    reverse(mid.begin(), mid.end());
-    return mid;
+    reverse(line.begin(), line.end());
+    return line;
 }
 
 //Thu mat khau bang bung no to hop
