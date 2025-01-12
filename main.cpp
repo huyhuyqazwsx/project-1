@@ -13,8 +13,11 @@ using namespace std;
 
 atomic<bool> check(false);// Co hieu mat khau
 atomic<bool> exiting(false); // Co hieu thoat
+atomic<bool> checkQueue(false); //co hieu hang doi
+atomic<bool> checkEof(false);
 atomic<int> countthread(0);
 atomic<unsigned long long> indexPassword(0);
+atomic<int> indexPasswordQueue(0);
 
 vector<thread> threads;
 
@@ -34,10 +37,12 @@ unsigned int numpassword = 0; // do dai mat khau
 unsigned int numthread = 1; //so luong
 unsigned long long passwordlength = 0; //do dai khong gian ky tu
 unsigned long long maxindex=0; // khong gian mat khau
+unsigned int const maxIndexQueue = 10000;
+unsigned int midMaxIndexQueue = maxIndexQueue;
 
 bool checkTuDien= false;
 bool hyperThread = false;//Kiểm tra siêu phân luồng
-queue<string> passQueue[20];
+string passQueue[maxIndexQueue];
 
 string zipfile; // Đường dẫn
 string directoryfile; //Đường dẫn file từ điển
@@ -261,14 +266,12 @@ void input() {
 
         else{
             string line;
-            unsigned long long lineindex = 0;
-
-            while (filePassword>>line) {
-                passQueue[lineindex % numthread].push(line);
-                lineindex++;
+            for(int i = 0 ;i < maxIndexQueue ; i++ ){
+                if(filePassword.eof()) break;
+                getline(filePassword, line);
+                passQueue[i] = line;
             }
         }
-
     }
 
 
@@ -302,6 +305,29 @@ void input() {
     }
 
     cout << "Bat dau chuong trinh:" << endl;
+}
+
+void updateQueue(){
+    string mid;
+    indexPasswordQueue.store(0);
+
+    while( indexPasswordQueue.load() < maxIndexQueue ){
+        if(!getline(filePassword, mid)){
+            checkEof.store(true);
+            midMaxIndexQueue = indexPasswordQueue.load();
+            break;
+        }
+
+        int currentIndex = indexPasswordQueue.fetch_add(1);
+        if (currentIndex < maxIndexQueue) {
+            passQueue[currentIndex] = mid;
+        } else {
+            indexPasswordQueue.fetch_sub(1);
+            break;
+        }
+    }
+
+    indexPasswordQueue.store(0);
 }
 
 void KiemTraDung() {
@@ -349,7 +375,7 @@ void TryPassWithBruteForce(string zipfile, long long maxindex, string passwordte
     }
 
 
-    long long start_index= indexPassword.load();
+    unsigned long long start_index= indexPassword.load();
 
     while (!check.load() && (start_index < maxindex) && !exiting.load()) {
         start_index = indexPassword.fetch_add(1);
@@ -387,7 +413,7 @@ void TryPassWithBruteForce(string zipfile, long long maxindex, string passwordte
     zip_close(archive);
 }
 
-void TryPassWithDictionary(string zipfile, int idnumthread) {
+void TryPassWithDictionary(string zipfile) {
     string password;
     int err = 0;
     zip_t* archive = zip_open(zipfile.c_str(), ZIP_RDONLY, &err);
@@ -404,9 +430,23 @@ void TryPassWithDictionary(string zipfile, int idnumthread) {
         return;
     }
 
-    while (!check.load() && !passQueue[idnumthread].empty()) {
-        password=passQueue[idnumthread].front();
-        passQueue[idnumthread].pop();
+    int index;
+    while (!check.load()) {
+        if(indexPasswordQueue.load() >= midMaxIndexQueue){
+            if(checkEof.load()) break;
+
+            while(checkQueue.load()){
+                this_thread::sleep_for(chrono::milliseconds (10));
+            }
+
+            checkQueue.store(true);
+            updateQueue();
+            checkQueue.store(false);
+
+        }
+
+        index = indexPasswordQueue.fetch_add(1);
+        password = passQueue[index];
 
         zip_file_t* zf = zip_fopen_encrypted(archive, st.name, 0, password.c_str());
         if (zf) {
@@ -443,7 +483,7 @@ void start() {
         auto startTudien = chrono::high_resolution_clock::now();
 
         for (int i = 0; i < numthread; i++) {
-            threads.emplace_back(TryPassWithDictionary, zipfile, i);
+            threads.emplace_back(TryPassWithDictionary, zipfile);
         }
 
         for (auto &th : threads) {
