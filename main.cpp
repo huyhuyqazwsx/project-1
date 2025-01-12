@@ -432,8 +432,9 @@ void TryPassWithDictionary(string zipfile) {
 
     int index;
     while (!check.load()) {
+        //kiem tra vi tri hang doi
         if(indexPasswordQueue.load() >= midMaxIndexQueue){
-            if(checkEof.load()) break;
+            if(checkEof.load()) break; // xay ra khi doc het file
 
             while(checkQueue.load()){
                 this_thread::sleep_for(chrono::milliseconds (10));
