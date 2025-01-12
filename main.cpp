@@ -183,7 +183,12 @@ void runProgressBar(unsigned long long maxindex) {
 
         mid = "\033[2K\r" + to_string(percentage) + " %" + " (" + to_string(index) + "/" + to_string(maxindex) + ")";
         cerr << mid;
+
+        if(index == maxindex){
+            cout << "\nDang ket thuc..." << endl;
+        }
     }
+
     if(check.load() || countthread.load()==numthread) {
         mid = "\033[2K\r100 % (" + to_string(maxindex) + "/" + to_string(maxindex) + ")";
         cerr <<  mid;
