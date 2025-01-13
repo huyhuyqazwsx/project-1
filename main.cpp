@@ -421,15 +421,28 @@ void KiemTraDung() {
 
 //Chuyen doi index sang password
 string indexTransfer(string &passwordText, unsigned long long i) {
-    unsigned long long size = passwordlength;
-    unsigned long long index = 0;
+    unsigned int size = passwordlength;
+    int sizePassword = 1; //
+    unsigned long long midsize = (long long)pow(size,sizePassword);
+
+    // Tính `sizePassword` phù hợp với `i`
+    while (i >= midsize) {
+        i -= midsize;
+        sizePassword++;
+        midsize =(long long)pow(passwordlength, sizePassword);
+    }
+
     string line = "";
     while (i != 0) {
-        index = i % size;
+        unsigned long long index = i % size;
         line += passwordText[index];
-        i = i / size;
+        i /= size;
     }
     reverse(line.begin(), line.end());
+
+    while (line.size() < sizePassword) {
+        line = "0" + line;
+    }
     return line;
 }
 
@@ -460,6 +473,8 @@ void TryPassWithBruteForce(string zipfile, long long maxindex, string passwordte
     while (!check.load() && (start_index < maxindex) && !exiting.load()) {
         start_index = indexPassword.fetch_add(1);
         string password = indexTransfer(passwordtext, start_index);
+
+        //cout << password << endl;
 
         zip_file_t* zf = zip_fopen_encrypted(archive, st.name, 0, password.c_str());
         if (zf) {
