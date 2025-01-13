@@ -206,74 +206,80 @@ void deleteFile(const string& filepath) {
     }
 }
 
-//Nhap lieu
-void input() {
-    // Nhập du lieu vao
-    cout<<"Nhap duong dan file zip: "<<endl;
-    cin>>zipfile;
+void input(){
+    string mid;
+    zip_t* archive;
 
+    cout << "===== ZIP Cracker =====\n";
+    cout << "1. Nhap duong dan file ZIP\n";
     do{
-        // cin>>numpassword;
-        cout << "Nhap do dai toi da mat khau muon thu (toi da 8): " << endl;
-        cin>>numpassword;
-    }while (numpassword > 8 || numpassword < 1);
+        getline(cin, zipfile);
+        int err = 0;
+        archive = zip_open(zipfile.c_str(), ZIP_RDONLY, &err);
+        if(!archive){
+            cout << "Loi duong dan file" << endl;
+            cout << "Hay thao tac lai" << endl;
+        }
+        else{
+            cout << "Nhap file thanh cong voi duong dan " << zipfile <<endl;
+            break;
+        }
+    }while(true);
 
+    //Lay thong tin lastpoin
+    ifstream inputFile("LastPoint.txt");
+    if (inputFile.is_open()) {
+        string line;
+        getline(inputFile, line);
+        if(line == zipfile) {
+            getline(inputFile, line);
+            long long num = stoll(line);
+            getline(inputFile, line);
+            cout << "\nPhat hien lan luu truoc cua file " << zipfile <<endl;
+            cout << "Ban co muon tiep tuc tu lan duyet truoc tai vi tri " << num << " voi gia tri la " << line << endl;
+            cout << "Y/N" << endl;
+            cin >> line;
 
-//    cout << "Nhap so luong ban muon thuc hien chuong trinh (luong toi da la 12): " << endl;
-//    cin>>numthread;
-
-    //nhap so luong loi su dung
-    cout << "So luong loai CPU cua he thong: " << max_cores << endl;
-
-    cout << "Chon che do chay chuong trinh:" << endl;
-    cout << "1. Hieu suat toi da (" << max_cores << " CPU)" << endl;
-    cout << "2. Hieu suat trung binh (" << half_cores << " CPU)" << endl;
-    cout << "3. Hieu suat thap (" << quarter_cores << " CPU)" << endl;
-
-    int mid;
-    cin >> mid;
-
-
-    //Chọn số lõi CPU dựa trên lựa chọn của người dùng
-    if (mid == 1) {
-        kiemsoatCPU(max_cores); // Sử dụng tất cả các lõi
-        numthread = max_cores - 2;
+            if (line == "Y" || line =="y") {
+                cout << "Da chon tiep tuc duyet voi lan duyet truoc..." << endl;
+                indexPassword.store(num);
+                inputFile.close();
+            }
+            else{
+                cout << "Chuong trinh se chay tu dau " << endl;
+                inputFile.close();
+                deleteFile("LastPoint.txt");
+            }
+        }
     }
-    else if (mid == 2) {
-        kiemsoatCPU(half_cores);// Sử dụng một nửa số lõi
-        numthread = half_cores;
-    }
-    else if (mid == 3) {
-        kiemsoatCPU(quarter_cores);  // Sử dụng một phần tư số lõi
-        numthread = quarter_cores;
-    }
-    else {
-        cout << "Chon sai che do, su dung che do hieu suat toi da!" << endl;
-        kiemsoatCPU(max_cores);  // Nếu chọn sai, mặc định sử dụng tất cả các lõi
-        numthread = max_cores - 2;
-    }
 
-    cout << "Da chon che do CPU voi mask: " << affinity_mask << endl;
-
-    //check tu dien
-    cout << "Ban co muon thu mat khau voi tu dien khong" << endl;
+    cout << "\n2. Ban co muon thu file voi tu dien khong " <<endl;
     cout << "Y/N" <<endl;
     string input;
     cin>>input;
-    if(input=="Y") {
+    if(input == "Y" || input == "y") {
         checkTuDien = true;
-
         cout << "Nhap duong dan file tu dien" <<endl;
         cin >> directoryfile;
-
         filePassword.open(directoryfile);
-        if(!filePassword.is_open()){
-            cout << "\nLoi mo file tu dien" <<endl;
 
+        while(!filePassword.is_open()){
             checkTuDien=false;
+            cout << "\nLoi mo file tu dien" <<endl;
+            cout << "Neu muon bo qua hay nhap Y/y" <<endl;
+
+            cin >> directoryfile;
+            if(directoryfile =="y" || directoryfile == "Y") break;
+            else{
+                cout << "Nhap duong dan file tu dien" <<endl;
+                cin >> directoryfile;
+                filePassword.open(directoryfile);
+            }
         }
 
-        else{
+        if(filePassword.is_open()){
+            cout << "Mo tep tu dien thanh cong voi file tu dien " << directoryfile <<endl;
+            checkTuDien = true;
             string line;
             for(int i = 0 ;i < maxIndexQueue ; i++ ){
                 if(getline(filePassword, line)){
@@ -285,8 +291,79 @@ void input() {
                 }
             }
         }
+        else{
+            cout << "Da bo qua phuong phap thu voi tu dien" << endl;
+        }
+    }
+    else{
+        cout << "Da bo qua tu dien" << endl;
     }
 
+    cout << "\n3.Hien tai mat khau toi da mac dinh la 5 ky tu (toi da 8)" << endl;
+    cout << "Voi bo ky tu san co la : " << passwordtext <<endl;
+    cout << "Ban co muon gioi han lai do dai ky tu khong" << endl;
+    cout << "Y/N" << endl ;
+    cin>>mid;
+
+    if(mid == "N" || mid == "n"){
+        cout << "\nChuong trinh se chay voi do dai ky tu toi da la 5 va bo ky tu" << endl << passwordtext <<endl;
+        numpassword = 5;
+    }
+    else{
+        do{
+            cout << "\nMoi nhap lai so ky tu mat khau toi da muon thu" << endl;
+            cin >> numpassword;
+            if(numpassword > 8 || numpassword < 1){
+                cout << "Loi cai dat voi do dai ky tu";
+            }
+        }while(numpassword > 8 || numpassword < 1);
+
+        cout << "Da chon do dai voi kich thuoc " << numpassword <<" ky tu" <<endl;
+    }
+
+    cout << "\n4.Chon che do chay" <<endl;
+    cout << "So luong loai CPU cua he thong hien tai: " << max_cores << " CPU" << endl;
+    cout << "1. Hieu suat toi da (" << max_cores << " CPU)"  << endl;
+    cout << "2. Hieu suat trung binh (" << half_cores << " CPU)" << endl;
+    cout << "3. Hieu suat thap (" << quarter_cores << " CPU)" << endl;
+
+    cin >> mid;
+    if (mid == "1") {
+        kiemsoatCPU(max_cores); // Sử dụng tất cả các lõi
+        numthread = max_cores - 2;
+        cout << "\nDa chon hieu suat toi da voi so luong mac dinh " << numthread <<endl;
+    }
+    else if (mid == "2") {
+        kiemsoatCPU(half_cores);// Sử dụng một nửa số lõi
+        numthread = half_cores;
+        cout << "\nDa chon hieu suat trung binh voi so luong mac dinh " << numthread <<endl;
+    }
+    else if (mid == "2") {
+        kiemsoatCPU(quarter_cores);  // Sử dụng một phần tư số lõi
+        numthread = quarter_cores;
+        cout << "\nDa chon hieu suat thap voi so luong mac dinh " << numthread <<endl;
+    }
+    else {
+        cout << "\nChon sai che do, su dung che do hieu suat toi da!" << endl;
+        kiemsoatCPU(max_cores);  // Nếu chọn sai, mặc định sử dụng tất cả các lõi
+        numthread = max_cores - 2;
+        cout << "So luong mac dinh dang chay" << numthread;
+    }
+
+    cout << "Da chon che do CPU voi mask: " << affinity_mask << endl;
+    cout << "Ban co muon chon lai so luong khong" <<endl;
+    cout << "Y/N" << endl;
+
+    cin >> mid ;
+    if(mid == "N" || mid == "n") cout << "\nBan da chon khong thay doi so luong mac dinh" <<endl;
+    else{
+        do{
+            cout << "\nNhap so luong ban muon thuc hien chuong trinh (luong toi da la 12): " << endl;
+            cin >> numthread;
+            if(numthread < 1 || numthread > 12) cout << "Loi chon so luong" <<endl;
+
+        }while(numthread < 1 || numthread > 12);
+    }
 
 
     //Xu ly sau nhap lieu
@@ -295,33 +372,11 @@ void input() {
         maxindex += (long long)pow(passwordlength, i);
     }
 
-
-
-    //Lay thong tin lastpoin
-    ifstream inputFile("LastPoint.txt");
-    if (inputFile.is_open()) {
-        string line;
-        getline(inputFile, line);
-        if(line == zipfile) {
-            getline(inputFile, line);
-            long long num = stoll(line);
-            getline(inputFile, line);
-            cout << "Ban co muon tiep tuc tu lan duyet truoc tai vi tri " << num << " voi gia tri la " << mid << endl;
-            cout << "Y/N" << endl;
-            cin >> line;
-
-            if (line == "Y") {
-                indexPassword.store(num);
-                inputFile.close();
-            }
-            else{
-                cout << "Chuong trinh se chay tu dau" << endl;
-                inputFile.close();
-                deleteFile("LastPoint.txt");
-            }
-        }
+    if(indexPassword.load() >= maxindex){
+        cout << "Phat hien vi tri duyet truoc vuot qua khong gian mat khau " << numpassword <<" ky tu" << endl;
+        cout << "Chuong trinh se duyet bung no to hop lai tu dau" <<endl;
+        indexPassword.store(0);
     }
-
     cout << "Bat dau chuong trinh:" << endl;
 }
 
@@ -356,12 +411,12 @@ void KiemTraDung() {
             unsigned char ch = _getch();  // lay ki tu an
             if (ch == 'F' || ch == 'f') {
                 exiting.store(true);  // Đặt cờ dừng
-                this_thread::sleep_for(chrono::milliseconds(10));
-                cout << "\nDang dung..." << endl;
+                this_thread::sleep_for(chrono::milliseconds(100));
                 break;
             }
         }
     }
+    cout << "\nDang dung..." << endl;
 }
 
 //Chuyen doi index sang password
@@ -507,9 +562,8 @@ void TryPassWithDictionary(string zipfile) {
 
 void start() {
     // Chạy chương trình với nhiều luồng
-
     if (checkTuDien) {
-        cout << "Dang thu voi tu dien" <<endl;
+        cout << "\nDang thu voi tu dien" <<endl;
         auto startTudien = chrono::high_resolution_clock::now();
 
         for (int i = 0; i < numthread; i++) {
@@ -535,7 +589,7 @@ void start() {
         if(checkTuDien) cout << "Khong tim thay mat khau voi tu dien" << endl;
 
         auto start = chrono::high_resolution_clock::now();
-        cout << "Dang thu voi bung no to hop " << endl;
+        cout << "\nDang thu voi bung no to hop " << endl;
         for (int i = 0; i < numthread; i++) {
             threads.emplace_back(TryPassWithBruteForce, zipfile, maxindex, passwordtext);
         }
@@ -573,11 +627,10 @@ void start() {
         fout << Point << endl;
         fout << mid << endl;
         fout.close();
-        cout << "Mat khau dung lai tai vi tri "<< Point << endl;
+        cout << "\nMat khau dung lai tai vi tri "<< Point << endl;
         cout << "Co ki tu la " << mid <<endl;
         cout << "Da luu thong tin last point vao thu muc LastPoint.txt"<<endl;
     }
-
     threads.clear();
 
 }
