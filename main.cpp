@@ -338,7 +338,7 @@ void input(){
         numthread = half_cores;
         cout << "\nDa chon hieu suat trung binh voi so luong mac dinh " << numthread <<endl;
     }
-    else if (mid == "2") {
+    else if (mid == "3") {
         kiemsoatCPU(quarter_cores);  // Sử dụng một phần tư số lõi
         numthread = quarter_cores;
         cout << "\nDa chon hieu suat thap voi so luong mac dinh " << numthread <<endl;
