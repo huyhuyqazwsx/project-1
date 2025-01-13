@@ -177,7 +177,7 @@ void runProgressBar(unsigned long long maxIndex) {
     string mid;
 
     while ( index < maxIndex && !check.load() && !exiting.load()) {
-        this_thread::sleep_for(chrono::milliseconds(200));
+        this_thread::sleep_for(chrono::milliseconds(500));
 
         index = min( indexPassword.load(), maxIndex );
         percentage = (float)index / (float)maxIndex;
@@ -421,9 +421,9 @@ void KiemTraDung() {
 
 //Chuyen doi index sang password
 string indexTransfer(string &passwordText, unsigned long long i) {
-    unsigned int size = passwordlength;
+    unsigned static int size = passwordlength;
     int sizePassword = 1; //
-    unsigned long long midsize = (long long)pow(size,sizePassword);
+    unsigned static long long midsize = (long long)pow(size,sizePassword);
 
     // Tính `sizePassword` phù hợp với `i`
     while (i >= midsize) {
@@ -469,6 +469,7 @@ void TryPassWithBruteForce(string zipfile, long long maxindex, string passwordte
 
 
     unsigned long long start_index= indexPassword.load();
+    char buffer[4096];
 
     while (!check.load() && (start_index < maxindex) && !exiting.load()) {
         start_index = indexPassword.fetch_add(1);
@@ -479,7 +480,6 @@ void TryPassWithBruteForce(string zipfile, long long maxindex, string passwordte
         zip_file_t* zf = zip_fopen_encrypted(archive, st.name, 0, password.c_str());
         if (zf) {
             // Đọc dữ liệu và kiểm tra CRC
-            char buffer[4096]; // Đọc mỗi lần 4 KB
             long long bytes_read = zip_fread(zf, buffer, sizeof(buffer));
             unsigned long crc = 0;
 
@@ -530,6 +530,7 @@ void TryPassWithDictionary(string zipfile) {
     }
 
     int index;
+    char buffer[4096]; // Đọc mỗi lần 4 KB
     while (!check.load()) {
         //kiem tra vi tri hang doi
         if(indexPasswordQueue.load() >= midMaxIndexQueue){
@@ -548,10 +549,10 @@ void TryPassWithDictionary(string zipfile) {
         index = indexPasswordQueue.fetch_add(1);
         password = passQueue[index];
 
+
         zip_file_t* zf = zip_fopen_encrypted(archive, st.name, 0, password.c_str());
         if (zf) {
             // Đọc dữ liệu và kiểm tra CRC
-            char buffer[4096]; // Đọc mỗi lần 4 KB
             long long bytes_read = zip_fread(zf, buffer, sizeof(buffer));
             unsigned long crc = 0;
 
