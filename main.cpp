@@ -211,161 +211,161 @@ void input(){
     zip_t* archive;
 
 
-//    cout << "===== ZIP Cracker =====\n";
-//    cout << "1. Nhap duong dan file ZIP\n";
-//    do{
-//        getline(cin, zipfile);
-//        int err = 0;
-//        archive = zip_open(zipfile.c_str(), ZIP_RDONLY, &err);
-//        if(!archive){
-//            cout << "Loi duong dan file" << endl;
-//            cout << "Hay thao tac lai" << endl;
-//        }
-//        else{
-//            cout << "Nhap file thanh cong voi duong dan " << zipfile <<endl;
-//            break;
-//        }
-//    }while(true);
-//
-//    //Lay thong tin lastpoin
-//    ifstream inputFile("LastPoint.txt");
-//    if (inputFile.is_open()) {
-//        string line;
-//        getline(inputFile, line);
-//        if(line == zipfile) {
-//            getline(inputFile, line);
-//            long long num = stoll(line);
-//            getline(inputFile, line);
-//            cout << "\nPhat hien lan luu truoc cua file " << zipfile <<endl;
-//            cout << "Ban co muon tiep tuc tu lan duyet truoc tai vi tri " << num << " voi gia tri la " << line << endl;
-//            cout << "Y/N" << endl;
-//            cin >> line;
-//
-//            if (line == "Y" || line =="y") {
-//                cout << "Da chon tiep tuc duyet voi lan duyet truoc..." << endl;
-//                indexPassword.store(num);
-//                inputFile.close();
-//            }
-//            else{
-//                cout << "Chuong trinh se chay tu dau " << endl;
-//                inputFile.close();
-//                deleteFile("LastPoint.txt");
-//            }
-//        }
-//    }
-//
-//    cout << "\n2. Ban co muon thu file voi tu dien khong " <<endl;
-//    cout << "Y/N" <<endl;
-//    string input;
-//    cin>>input;
-//    if(input == "Y" || input == "y") {
-//        checkTuDien = true;
-//        cout << "Nhap duong dan file tu dien" <<endl;
-//        cin >> directoryfile;
-//        filePassword.open(directoryfile);
-//
-//        while(!filePassword.is_open()){
-//            checkTuDien=false;
-//            cout << "\nLoi mo file tu dien" <<endl;
-//            cout << "Neu muon bo qua hay nhap Y/y" <<endl;
-//
-//            cin >> directoryfile;
-//            if(directoryfile =="y" || directoryfile == "Y") break;
-//            else{
-//                cout << "Nhap duong dan file tu dien" <<endl;
-//                cin >> directoryfile;
-//                filePassword.open(directoryfile);
-//            }
-//        }
-//
-//        if(filePassword.is_open()){
-//            cout << "Mo tep tu dien thanh cong voi file tu dien " << directoryfile <<endl;
-//            checkTuDien = true;
-//            string line;
-//            for(int i = 0 ;i < maxIndexQueue ; i++ ){
-//                if(getline(filePassword, line)){
-//                    passQueue[i] = line;
-//                }
-//                else{
-//                    checkEof.store(true);
-//                    midMaxIndexQueue=i;
-//                }
-//            }
-//        }
-//        else{
-//            cout << "Da bo qua phuong phap thu voi tu dien" << endl;
-//        }
-//    }
-//    else{
-//        cout << "Da bo qua tu dien" << endl;
-//    }
-//
-//    cout << "\n3.Hien tai mat khau toi da mac dinh la 5 ky tu (toi da 8)" << endl;
-//    cout << "Voi bo ky tu san co la : " << passwordtext <<endl;
-//    cout << "Ban co muon gioi han lai do dai ky tu khong" << endl;
-//    cout << "Y/N" << endl ;
-//    cin>>mid;
-//
-//    if(mid == "N" || mid == "n"){
-//        cout << "\nChuong trinh se chay voi do dai ky tu toi da la 5 va bo ky tu" << endl << passwordtext <<endl;
-//        numpassword = 5;
-//    }
-//    else{
-//        do{
-//            cout << "\nMoi nhap lai so ky tu mat khau toi da muon thu" << endl;
-//            cin >> numpassword;
-//            if(numpassword > 8 || numpassword < 1){
-//                cout << "Loi cai dat voi do dai ky tu";
-//            }
-//        }while(numpassword > 8 || numpassword < 1);
-//
-//        cout << "Da chon do dai voi kich thuoc " << numpassword <<" ky tu" <<endl;
-//    }
-//
-//    cout << "\n4.Chon che do chay" <<endl;
-//    cout << "So luong loai CPU cua he thong hien tai: " << max_cores << " CPU" << endl;
-//    cout << "1. Hieu suat toi da (" << max_cores - 2 << " CPU)"  << endl;
-//    cout << "2. Hieu suat trung binh (" << half_cores << " CPU)" << endl;
-//    cout << "3. Hieu suat thap (" << quarter_cores << " CPU)" << endl;
-//
-//    cin >> mid;
-//    if (mid == "1") {
-//
-//        kiemsoatCPU(max_cores - 2); // Sử dụng tất cả các lõi
-//        numthread = max_cores - 2;
-//        cout << "\nDa chon hieu suat toi da voi so luong mac dinh " << numthread <<endl;
-//    }
-//    else if (mid == "2") {
-//        kiemsoatCPU(half_cores);// Sử dụng một nửa số lõi
-//        numthread = half_cores;
-//        cout << "\nDa chon hieu suat trung binh voi so luong mac dinh " << numthread <<endl;
-//    }
-//    else if (mid == "3") {
-//        kiemsoatCPU(quarter_cores);  // Sử dụng một phần tư số lõi
-//        numthread = quarter_cores;
-//        cout << "\nDa chon hieu suat thap voi so luong mac dinh " << numthread <<endl;
-//    }
-//    else {
-//        cout << "\nChon sai che do, su dung che do hieu suat toi da!" << endl;
-//        kiemsoatCPU(max_cores);  // Nếu chọn sai, mặc định sử dụng tất cả các lõi
-//        numthread = max_cores - 2;
-//        cout << "So luong mac dinh dang chay" << numthread;
-//    }
-//
-//    cout << "Da chon che do CPU voi mask: " << affinity_mask << endl;
-//    cout << "Ban co muon chon lai so luong khong" <<endl;
-//    cout << "Y/N" << endl;
-//
-//    cin >> mid ;
-//    if(mid == "N" || mid == "n") cout << "\nBan da chon khong thay doi so luong mac dinh" <<endl;
-//    else{
-//        do{
-//            cout << "\nNhap so luong ban muon thuc hien chuong trinh (luong toi da la 12): " << endl;
-//            cin >> numthread;
-//            if(numthread < 1 || numthread > 12) cout << "Loi chon so luong" <<endl;
-//
-//        }while(numthread < 1 || numthread > 12);
-//    }
+    cout << "===== ZIP Cracker =====\n";
+    cout << "1. Nhap duong dan file ZIP\n";
+    do{
+        getline(cin, zipfile);
+        int err = 0;
+        archive = zip_open(zipfile.c_str(), ZIP_RDONLY, &err);
+        if(!archive){
+            cout << "Loi duong dan file" << endl;
+            cout << "Hay thao tac lai" << endl;
+        }
+        else{
+            cout << "Nhap file thanh cong voi duong dan " << zipfile <<endl;
+            break;
+        }
+    }while(true);
+
+    //Lay thong tin lastpoin
+    ifstream inputFile("LastPoint.txt");
+    if (inputFile.is_open()) {
+        string line;
+        getline(inputFile, line);
+        if(line == zipfile) {
+            getline(inputFile, line);
+            long long num = stoll(line);
+            getline(inputFile, line);
+            cout << "\nPhat hien lan luu truoc cua file " << zipfile <<endl;
+            cout << "Ban co muon tiep tuc tu lan duyet truoc tai vi tri " << num << " voi gia tri la " << line << endl;
+            cout << "Y/N" << endl;
+            cin >> line;
+
+            if (line == "Y" || line =="y") {
+                cout << "Da chon tiep tuc duyet voi lan duyet truoc..." << endl;
+                indexPassword.store(num);
+                inputFile.close();
+            }
+            else{
+                cout << "Chuong trinh se chay tu dau " << endl;
+                inputFile.close();
+                deleteFile("LastPoint.txt");
+            }
+        }
+    }
+
+    cout << "\n2. Ban co muon thu file voi tu dien khong " <<endl;
+    cout << "Y/N" <<endl;
+    string input;
+    cin>>input;
+    if(input == "Y" || input == "y") {
+        checkTuDien = true;
+        cout << "Nhap duong dan file tu dien" <<endl;
+        cin >> directoryfile;
+        filePassword.open(directoryfile);
+
+        while(!filePassword.is_open()){
+            checkTuDien=false;
+            cout << "\nLoi mo file tu dien" <<endl;
+            cout << "Neu muon bo qua hay nhap Y/y" <<endl;
+
+            cin >> directoryfile;
+            if(directoryfile =="y" || directoryfile == "Y") break;
+            else{
+                cout << "Nhap duong dan file tu dien" <<endl;
+                cin >> directoryfile;
+                filePassword.open(directoryfile);
+            }
+        }
+
+        if(filePassword.is_open()){
+            cout << "Mo tep tu dien thanh cong voi file tu dien " << directoryfile <<endl;
+            checkTuDien = true;
+            string line;
+            for(int i = 0 ;i < maxIndexQueue ; i++ ){
+                if(getline(filePassword, line)){
+                    passQueue[i] = line;
+                }
+                else{
+                    checkEof.store(true);
+                    midMaxIndexQueue=i;
+                }
+            }
+        }
+        else{
+            cout << "Da bo qua phuong phap thu voi tu dien" << endl;
+        }
+    }
+    else{
+        cout << "Da bo qua tu dien" << endl;
+    }
+
+    cout << "\n3.Hien tai mat khau toi da mac dinh la 4 ky tu (toi da 8)" << endl;
+    cout << "Voi bo ky tu san co la : " << passwordtext <<endl;
+    cout << "Ban co muon gioi han lai do dai ky tu khong" << endl;
+    cout << "Y/N" << endl ;
+    cin>>mid;
+
+    if(mid == "N" || mid == "n"){
+        cout << "\nChuong trinh se chay voi do dai ky tu toi da la 4 va bo ky tu" << endl << passwordtext <<endl;
+        numpassword = 4;
+    }
+    else{
+        do{
+            cout << "\nMoi nhap lai so ky tu mat khau toi da muon thu" << endl;
+            cin >> numpassword;
+            if(numpassword > 8 || numpassword < 1){
+                cout << "Loi cai dat voi do dai ky tu";
+            }
+        }while(numpassword > 8 || numpassword < 1);
+
+        cout << "Da chon do dai voi kich thuoc " << numpassword <<" ky tu" <<endl;
+    }
+
+    cout << "\n4.Chon che do chay" <<endl;
+    cout << "So luong loai CPU cua he thong hien tai: " << max_cores << " CPU" << endl;
+    cout << "1. Hieu suat toi da (" << max_cores - 2 << " CPU)"  << endl;
+    cout << "2. Hieu suat trung binh (" << half_cores << " CPU)" << endl;
+    cout << "3. Hieu suat thap (" << quarter_cores << " CPU)" << endl;
+
+    cin >> mid;
+    if (mid == "1") {
+
+        kiemsoatCPU(max_cores - 2); // Sử dụng tất cả các lõi
+        numthread = max_cores - 2;
+        cout << "\nDa chon hieu suat toi da voi so luong mac dinh " << numthread <<endl;
+    }
+    else if (mid == "2") {
+        kiemsoatCPU(half_cores);// Sử dụng một nửa số lõi
+        numthread = half_cores;
+        cout << "\nDa chon hieu suat trung binh voi so luong mac dinh " << numthread <<endl;
+    }
+    else if (mid == "3") {
+        kiemsoatCPU(quarter_cores);  // Sử dụng một phần tư số lõi
+        numthread = quarter_cores;
+        cout << "\nDa chon hieu suat thap voi so luong mac dinh " << numthread <<endl;
+    }
+    else {
+        cout << "\nChon sai che do, su dung che do hieu suat toi da!" << endl;
+        kiemsoatCPU(max_cores);  // Nếu chọn sai, mặc định sử dụng tất cả các lõi
+        numthread = max_cores - 2;
+        cout << "So luong mac dinh dang chay" << numthread;
+    }
+
+    cout << "Da chon che do CPU voi mask: " << affinity_mask << endl;
+    cout << "Ban co muon chon lai so luong khong" <<endl;
+    cout << "Y/N" << endl;
+
+    cin >> mid ;
+    if(mid == "N" || mid == "n") cout << "\nBan da chon khong thay doi so luong mac dinh" <<endl;
+    else{
+        do{
+            cout << "\nNhap so luong ban muon thuc hien chuong trinh (luong toi da la 12): " << endl;
+            cin >> numthread;
+            if(numthread < 1 || numthread > 12) cout << "Loi chon so luong" <<endl;
+
+        }while(numthread < 1 || numthread > 12);
+    }
 
 
     //Xu ly sau nhap lieu
@@ -409,7 +409,7 @@ void KiemTraDung() {
     while (!check.load() && countthread.load() != numthread) {
         this_thread::sleep_for(chrono::milliseconds(50));
 
-        if (_kbhit()) {
+            if (_kbhit()) {
             unsigned char ch = _getch();  // lay ki tu an
             if (ch == 'F' || ch == 'f') {
                 exiting.store(true);  // Đặt cờ dừng
@@ -653,29 +653,10 @@ void start() {
 }
 
 int main(){
-    cout << "nhap so luong" <<endl;
-    cin>>numthread;
-    kiemsoatCPU(numthread);
-    //Nhap du lieu
-    for(int i=0;i<10;i++){
-        //test
-        zipfile = "D:\\testzip\\huytestZZZZ.zip";
-        numpassword = 4;
 
+    input();
 
-        check.store(false);// Co hieu mat khau
-        exiting.store(false); // Co hieu thoat
-        checkQueue.store(false); //co hieu hang doi
-        checkEof.store(false);
-        countthread.store(0);
-        indexPassword.store(0);
-        indexPasswordQueue.store(0);
-
-        input();
-
-        //Bat dau chuong trinh
-        start();
-    }
+    start();
 
     system("pause");
     return 0;
