@@ -34,7 +34,7 @@ ZIP Cracker là một công cụ giúp bẻ khóa mật khẩu của file ZIP b�
     - Sử dụng trình biên dịch C++ để biên dịch mã nguồn. Ví dụ với `g++`:
 
       ```bash
-      g++ -o zipcracker zipcracker.cpp -lz -lzip
+      g++ -o zipcracker main.cpp -lz -lzip
       ```
 
 ## Cách sử dụng
