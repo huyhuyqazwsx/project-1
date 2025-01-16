@@ -328,6 +328,7 @@ void input(){
     cout << "2. Hieu suat trung binh (" << half_cores << " CPU)" << endl;
     cout << "3. Hieu suat thap (" << quarter_cores << " CPU)" << endl;
 
+
     cin >> mid;
     if (mid == "1") {
 
@@ -534,7 +535,7 @@ void TryPassWithDictionary(string zipfile) {
     char buffer[4096]; // Đọc mỗi lần 4 KB
     while (!check.load()) {
         //kiem tra vi tri hang doi
-        if(indexPasswordQueue.load() >= midMaxIndexQueue){
+        if(indexPasswordQueue.load() > midMaxIndexQueue){
             if(checkEof.load()) break; // xay ra khi doc het file
 
             while(checkQueue.load()){
@@ -546,9 +547,7 @@ void TryPassWithDictionary(string zipfile) {
             checkQueue.store(false);
 
         }
-
-        index = indexPasswordQueue.fetch_add(1);
-        password = passQueue[index];
+        password = passQueue[indexPasswordQueue.fetch_add(1)];
 
 
         zip_file_t* zf = zip_fopen_encrypted(archive, st.name, 0, password.c_str());
