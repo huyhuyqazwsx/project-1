@@ -48,7 +48,7 @@ ZIP Cracker là một công cụ giúp bẻ khóa mật khẩu của file ZIP b�
       - Đường dẫn đến file ZIP.
       - Đường dẫn đến file từ điển (nếu sử dụng phương pháp từ điển).
       - Độ dài tối đa của mật khẩu (tối đa 8 ký tự).
-      - Số lượng luồng cần sử dụng (tối đa 12 luồng).
+      - Số lượng luồng cần sử dụng (tối đa với số luồng hiện tại của phần cứng).
 
 3. **Quản lý tiến trình**:
     - Trong khi chương trình đang chạy, bạn có thể nhấn phím `F` để dừng quá trình.
