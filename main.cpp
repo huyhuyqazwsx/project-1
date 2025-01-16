@@ -360,11 +360,11 @@ void input(){
     if(mid == "N" || mid == "n") cout << "\nBan da chon khong thay doi so luong mac dinh" <<endl;
     else{
         do{
-            cout << "\nNhap so luong ban muon thuc hien chuong trinh (luong toi da la 12): " << endl;
+            cout << "\nNhap so luong ban muon thuc hien chuong trinh (luong toi da la "<< max_cores <<"): " << endl;
             cin >> numthread;
-            if(numthread < 1 || numthread > 12) cout << "Loi chon so luong" <<endl;
+            if(numthread < 1 || numthread > max_cores) cout << "Loi chon so luong" <<endl;
 
-        }while(numthread < 1 || numthread > 12);
+        }while(numthread < 1 || numthread > max_cores);
     }
 
 
